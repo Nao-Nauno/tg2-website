@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ user.username }}'s Profile - The Guild 2: Renaissance{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <!-- User banner -->
+    <div class="relative h-64 rounded-lg overflow-hidden mb-4 shadow-lg">
+        <img src="{{ url_for('static', filename=user.banner_path) }}" alt="User banner" class="w-full h-full object-cover">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+        <div class="absolute bottom-0 left-0 p-6 flex items-end">
+            <div class="mr-6">
+                <img src="{{ url_for('static', filename=user.avatar_path) }}" alt="{{ user.username }}" 
+                     class="w-24 h-24 rounded-full border-4 border-primary-color shadow-lg">
+            </div>
+            <div>
+                <h1 class="text-3xl font-medieval text-white mb-1">{{ user.username }}</h1>
+                {% if user.title %}
+                    <div class="text-primary-color font-medieval mb-2">{{ user.title }}</div>
+                {% endif %}
+                <div class="text-white/70 text-sm">
+                    Member since {{ user.created_at.strftime('%B %Y') }}
+                </div>
+            </div>
+        </div>
+        
+        {% if current_user.is_authenticated and current_user.id == user.id %}
+            <div class="absolute bottom-4 right-4">
+                <a href="{{ url_for('user.edit_profile') }}" class="btn btn-primary">
+                    <i class="fas fa-edit mr-2"></i> Edit Profile
+                </a>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Profile content -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Left column - User info -->
+        <div class="md:col-span-1">
+            <div class="modern-card mb-6">
+                <div class="modern-card-header">
+                    <h2>About</h2>
+                </div>
+                <div class="modern-card-content">
+                    {% if user.bio %}
+                        <div class="mb-4">
+                            {{ user.bio }}
+                        </div>
+                    {% else %}
+                        <div class="text-text-secondary italic mb-4">
+                            This user hasn't added a bio yet.
+                        </div>
+                    {% endif %}
+                    
+                    <div class="space-y-3">
+                        {% if user.location %}
+                            <div class="flex items-center">
+                                <i class="fas fa-map-marker-alt text-primary-color mr-3 w-5"></i>
+                                <span>{{ user.location }}</span>
+                            </div>
+                        {% endif %}
+                        
+                        {% if user.website %}
+                            <div class="flex items-center">
+                                <i class="fas fa-globe text-primary-color mr-3 w-5"></i>
+                                <a href="{{ user.website }}" target="_blank" class="text-primary-color hover:underline">
+                                    {{ user.website.replace('https://', '').replace('http://', '') }}
+                                </a>
+                            </div>
+                        {% endif %}
+                        
+                        {% if user.discord %}
+                            <div class="flex items-center">
+                                <i class="fab fa-discord text-primary-color mr-3 w-5"></i>
+                                <span>{{ user.discord }}</span>
+                            </div>
+                        {% endif %}
+                        
+                        {% if user.steam_id %}
+                            <div class="flex items-center">
+                                <i class="fab fa-steam text-primary-color mr-3 w-5"></i>
+                                <a href="https://steamcommunity.com/id/{{ user.steam_id }}" target="_blank" class="text-primary-color hover:underline">
+                                    {{ user.steam_id }}
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modern-card">
+                <div class="modern-card-header">
+                    <h2>Guild Statistics</h2>
+                </div>
+                <div class="modern-card-content">
+                    <div class="flex items-center justify-between py-2 border-b border-border-color">
+                        <div class="flex items-center">
+                            <i class="fas fa-scroll text-primary-color mr-3 w-5"></i>
+                            <span>Posts</span>
+                        </div>
+                        <span class="font-bold">{{ user.get_post_count() }}</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between py-2 border-b border-border-color">
+                        <div class="flex items-center">
+                            <i class="fas fa-comment text-primary-color mr-3 w-5"></i>
+                            <span>Comments</span>
+                        </div>
+                        <span class="font-bold">{{ user.get_comment_count() }}</span>
+                    </div>
+                    
+                    {% if user.favorite_profession %}
+                        <div class="flex items-center justify-between py-2">
+                            <div class="flex items-center">
+                                <i class="fas fa-hammer text-primary-color mr-3 w-5"></i>
+                                <span>Favorite Profession</span>
+                            </div>
+                            <span class="font-bold">{{ user.favorite_profession }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right column - Activity -->
+        <div class="md:col-span-2">
+            <!-- Recent posts -->
+            <div class="modern-card mb-6">
+                <div class="modern-card-header flex justify-between items-center">
+                    <h2>Recent Posts</h2>
+                    <a href="{{ url_for('user.user_posts', username=user.username) }}" class="text-sm text-primary-color hover:text-accent-color">
+                        View All
+                    </a>
+                </div>
+                <div class="modern-card-content p-0">
+                    {% if recent_posts %}
+                        <div class="divide-y divide-border-color">
+                            {% for post in recent_posts %}
+                                <div class="p-4 hover:bg-black/20">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <a href="{{ url_for('main.view_post', post_id=post.id) }}" class="text-lg font-medieval text-primary-color hover:text-accent-color">
+                                            {{ post.title }}
+                                        </a>
+                                        <span class="text-sm text-text-secondary">{{ post.created_at.strftime('%b %d, %Y') }}</span>
+                                    </div>
+                                    <div class="text-sm text-text-secondary mb-2">
+                                        Category: <span class="text-text-primary">{{ post.category|capitalize }}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <div class="text-sm">
+                                            <i class="fas fa-comment text-primary-color mr-1"></i>
+                                            {{ post.get_comment_count() }} comments
+                                        </div>
+                                        <a href="{{ url_for('main.view_post', post_id=post.id) }}" class="text-primary-color hover:text-accent-color text-sm">
+                                            Read More →
+                                        </a>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="p-6 text-center text-text-secondary">
+                            {{ user.username }} hasn't created any posts yet.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Recent comments -->
+            <div class="modern-card">
+                <div class="modern-card-header flex justify-between items-center">
+                    <h2>Recent Comments</h2>
+                    <a href="{{ url_for('user.user_comments', username=user.username) }}" class="text-sm text-primary-color hover:text-accent-color">
+                        View All
+                    </a>
+                </div>
+                <div class="modern-card-content p-0">
+                    {% if recent_comments %}
+                        <div class="divide-y divide-border-color">
+                            {% for comment in recent_comments %}
+                                <div class="p-4 hover:bg-black/20">
+                                    <div class="text-sm text-text-secondary mb-1">
+                                        On <a href="{{ url_for('main.view_post', post_id=comment.post_id) }}" class="text-primary-color hover:text-accent-color">{{ comment.post.title }}</a> 
+                                        • {{ comment.created_at.strftime('%b %d, %Y') }}
+                                    </div>
+                                    <div class="mb-2">
+                                        {{ comment.content|truncate(150) }}
+                                    </div>
+                                    <div class="text-right">
+                                        <a href="{{ url_for('main.view_post', post_id=comment.post_id) }}#comment-{{ comment.id }}" class="text-primary-color hover:text-accent-color text-sm">
+                                            View in Context →
+                                        </a>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="p-6 text-center text-text-secondary">
+                            {{ user.username }} hasn't made any comments yet.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

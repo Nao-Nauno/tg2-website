@@ -1,0 +1,363 @@
+/* Animation effects for the Guild 2 Renaissance site */
+
+/* Animated background */
+.animated-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+    background: linear-gradient(135deg, #0d0d0d 0%, #1a1207 50%, #0d0d0d 100%);
+}
+
+.animated-bg::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('/static/images/subtle-pattern.png');
+    opacity: 0.05;
+    z-index: -1;
+}
+
+/* Floating particles */
+.particles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.particle {
+    position: absolute;
+    border-radius: 50%;
+    background-color: rgba(200, 121, 65, 0.4);
+    box-shadow: 0 0 10px 2px rgba(200, 121, 65, 0.2);
+    animation: float 15s infinite ease-in-out;
+}
+
+.particle:nth-child(1) {
+    width: 8px;
+    height: 8px;
+    top: 20%;
+    left: 10%;
+    animation-duration: 25s;
+    animation-delay: 0s;
+}
+
+.particle:nth-child(2) {
+    width: 12px;
+    height: 12px;
+    top: 40%;
+    left: 30%;
+    animation-duration: 30s;
+    animation-delay: 2s;
+}
+
+.particle:nth-child(3) {
+    width: 6px;
+    height: 6px;
+    top: 65%;
+    left: 60%;
+    animation-duration: 35s;
+    animation-delay: 5s;
+}
+
+.particle:nth-child(4) {
+    width: 10px;
+    height: 10px;
+    top: 15%;
+    left: 70%;
+    animation-duration: 20s;
+    animation-delay: 1s;
+}
+
+.particle:nth-child(5) {
+    width: 14px;
+    height: 14px;
+    top: 75%;
+    left: 20%;
+    animation-duration: 28s;
+    animation-delay: 3s;
+}
+
+.particle:nth-child(6) {
+    width: 7px;
+    height: 7px;
+    top: 35%;
+    left: 85%;
+    animation-duration: 22s;
+    animation-delay: 7s;
+}
+
+.particle:nth-child(7) {
+    width: 9px;
+    height: 9px;
+    top: 85%;
+    left: 45%;
+    animation-duration: 26s;
+    animation-delay: 4s;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0) translateX(0);
+    }
+    25% {
+        transform: translateY(-30px) translateX(15px);
+    }
+    50% {
+        transform: translateY(-15px) translateX(30px);
+    }
+    75% {
+        transform: translateY(-25px) translateX(5px);
+    }
+}
+
+/* Ambient glow effect */
+.ambient-glow {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0) 60%);
+    filter: blur(30px);
+    animation: pulse 10s infinite alternate;
+    mix-blend-mode: screen;
+    pointer-events: none;
+}
+
+.glow-1 {
+    top: 10%;
+    left: 20%;
+    animation-delay: 0s;
+}
+
+.glow-2 {
+    top: 60%;
+    left: 70%;
+    animation-delay: 5s;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0.1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.3;
+        transform: scale(1.1);
+    }
+    100% {
+        opacity: 0.1;
+        transform: scale(1);
+    }
+}
+
+/* Page transition animations */
+.page-transition {
+    animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Card hover effects */
+.modern-card {
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.modern-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Button hover animation */
+.btn-primary {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+}
+
+.btn-primary::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.5);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%);
+    transform-origin: 50% 50%;
+}
+
+.btn-primary:hover::after {
+    animation: ripple 1s ease-out;
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(0, 0);
+        opacity: 0.5;
+    }
+    20% {
+        transform: scale(25, 25);
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 0;
+        transform: scale(40, 40);
+    }
+}
+
+/* Guild emblem animation */
+.guild-emblem {
+    animation: glow 3s infinite alternate;
+}
+
+@keyframes glow {
+    0% {
+        filter: drop-shadow(0 0 2px rgba(200, 121, 65, 0.3));
+    }
+    100% {
+        filter: drop-shadow(0 0 8px rgba(200, 121, 65, 0.6));
+    }
+}
+
+/* Header highlight effect */
+.nav-item a {
+    position: relative;
+}
+
+.nav-item a::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: var(--primary-color);
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.3s ease;
+}
+
+.nav-item a:hover::after {
+    transform: scaleX(1);
+    transform-origin: left;
+}
+
+/* Post content fade-in effect */
+.post-content {
+    animation: contentFadeIn 0.8s ease-out;
+}
+
+@keyframes contentFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Animated Medieval Weather Effects */
+.weather-effect {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* Fog effect */
+.fog {
+    background: url('/static/images/fog-texture.png');
+    opacity: 0.03;
+    animation: fog-movement 120s linear infinite;
+}
+
+@keyframes fog-movement {
+    0% {
+        transform: translate3d(0, 0, 0);
+    }
+    50% {
+        transform: translate3d(-25%, 0, 0);
+    }
+    100% {
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+/* Fireflies effect for night theme */
+.fireflies .firefly {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background-color: rgba(255, 223, 128, 0.6);
+    box-shadow: 0 0 4px 2px rgba(255, 223, 128, 0.3);
+    animation: firefly-glow 6s infinite;
+}
+
+@keyframes firefly-glow {
+    0%, 100% {
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+/* Animated parchment ornaments */
+.ornament {
+    position: absolute;
+    width: 150px;
+    height: 150px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    opacity: 0.03;
+    pointer-events: none;
+}
+
+.ornament-1 {
+    top: 10%;
+    left: 5%;
+    background-image: url('/static/images/ornament1.png');
+    animation: ornament-float 15s ease-in-out infinite;
+}
+
+.ornament-2 {
+    bottom: 10%;
+    right: 5%;
+    background-image: url('/static/images/ornament2.png');
+    animation: ornament-float 18s ease-in-out infinite reverse;
+}
+
+@keyframes ornament-float {
+    0%, 100% {
+        transform: rotate(-5deg);
+    }
+    50% {
+        transform: rotate(5deg);
+    }
+}

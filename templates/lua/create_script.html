@@ -1,0 +1,464 @@
+<!-- templates/lua/create_script.html -->
+{% extends 'base.html' %}
+
+{% block title %}Create Lua Script - The Guild 2: Renaissance{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="page-title">Create New Lua Script</h1>
+    
+    <div class="modern-card">
+        <div class="modern-card-header">
+            <h2>Script Details</h2>
+        </div>
+        <div class="modern-card-content">
+            <form method="POST" action="{{ url_for('lua.create_script') }}">
+                <div class="form-control mb-4">
+                    <label for="title" class="form-label">Title</label>
+                    <input type="text" id="title" name="title" required class="form-input" 
+                           placeholder="Enter a descriptive title for your script">
+                </div>
+                
+                <div class="form-control mb-4">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea id="description" name="description" class="form-input h-24" 
+                              placeholder="Describe what your script does and how to use it"></textarea>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="form-control">
+                        <label for="visibility" class="form-label">Visibility</label>
+                        <select id="visibility" name="visibility" class="form-input">
+                            <option value="private">Private (only you and collaborators)</option>
+                            <option value="unlisted">Unlisted (accessible with link)</option>
+                            <option value="public">Public (visible to everyone)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label for="tags" class="form-label">Tags (comma separated)</label>
+                        <input type="text" id="tags" name="tags" class="form-input" 
+                               placeholder="gameplay, economy, ui, etc.">
+                    </div>
+                </div>
+                
+                <div class="form-control mb-6">
+                    <label for="initial-content" class="form-label">Initial Script Content</label>
+                    <div class="relative">
+                        <div class="absolute top-0 right-0 mt-2 mr-2 z-10">
+                            <button type="button" id="template-selector" class="btn btn-secondary btn-sm">
+                                <i class="fas fa-file-code mr-1"></i> Use Template
+                            </button>
+                        </div>
+                        <textarea id="initial-content" name="content" class="form-input h-64 font-mono" 
+                                  placeholder="-- Your Lua script here">-- Your Lua script here
+
+function OnInit()
+  -- Initialization code
+end</textarea>
+                    </div>
+                </div>
+                
+                <div class="form-control mb-6">
+                    <label for="metadata" class="form-label">Metadata (JSON)</label>
+                    <textarea id="metadata" name="metadata" class="form-input h-24 font-mono" 
+                              placeholder="{&#34;category&#34;: &#34;gameplay&#34;, &#34;gameVersion&#34;: &#34;1.0&#34;, &#34;dependencies&#34;: []}">{
+  "category": "gameplay",
+  "gameVersion": "1.0",
+  "dependencies": []
+}</textarea>
+                </div>
+                
+                <div class="flex justify-between">
+                    <a href="{{ url_for('lua.script_library') }}" class="btn btn-secondary">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        Create Script
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Template selector modal -->
+<div id="template-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-card-bg rounded-lg shadow-xl w-full max-w-lg p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-medieval text-primary-color">Script Templates</h3>
+            <button id="close-template-modal" class="text-text-secondary hover:text-primary-color">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="space-y-3 mb-6">
+            <div class="p-3 bg-darker-bg rounded border border-border-color cursor-pointer hover:border-primary-color transition-colors template-option">
+                <h4 class="font-medieval text-primary-color mb-1">Basic Script</h4>
+                <p class="text-sm text-text-secondary">A simple script with initialization and update functions</p>
+            </div>
+            
+            <div class="p-3 bg-darker-bg rounded border border-border-color cursor-pointer hover:border-primary-color transition-colors template-option">
+                <h4 class="font-medieval text-primary-color mb-1">Economy Mod</h4>
+                <p class="text-sm text-text-secondary">Template for modifying game economy values and behaviors</p>
+            </div>
+            
+            <div class="p-3 bg-darker-bg rounded border border-border-color cursor-pointer hover:border-primary-color transition-colors template-option">
+                <h4 class="font-medieval text-primary-color mb-1">UI Enhancement</h4>
+                <p class="text-sm text-text-secondary">Template for creating UI modifications</p>
+            </div>
+            
+            <div class="p-3 bg-darker-bg rounded border border-border-color cursor-pointer hover:border-primary-color transition-colors template-option">
+                <h4 class="font-medieval text-primary-color mb-1">Character Behavior</h4>
+                <p class="text-sm text-text-secondary">Template for modifying NPC AI and behavior</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Template Modal Controls
+    const templateBtn = document.getElementById('template-selector');
+    const templateModal = document.getElementById('template-modal');
+    const closeTemplateBtn = document.getElementById('close-template-modal');
+    const templateOptions = document.querySelectorAll('.template-option');
+    const contentTextarea = document.getElementById('initial-content');
+    const metadataTextarea = document.getElementById('metadata');
+    
+    // Templates
+    const templates = {
+        'Basic Script': {
+            content: `-- Basic Guild 2: Renaissance Script
+-- Description: A simple script template with initialization and update functions
+
+-- Called when the script is first loaded
+function OnInit()
+    print("Script initialized!")
+    -- Your initialization code here
+end
+
+-- Called every game tick
+function OnUpdate()
+    -- Your update code here
+end
+
+-- Called when the script is unloaded
+function OnShutdown()
+    print("Script shutting down!")
+    -- Cleanup code here
+end`,
+            metadata: {
+                category: "gameplay",
+                gameVersion: "1.0",
+                dependencies: []
+            }
+        },
+        'Economy Mod': {
+            content: `-- Economy Modification Script
+-- Description: Modifies economic values and behaviors
+
+-- Configuration
+local config = {
+    priceMultiplier = 1.2, -- Increase all prices by 20%
+    wageMultiplier = 1.1,  -- Increase wages by 10%
+    taxRate = 0.75         -- Reduce taxes to 75% of base value
+}
+
+-- Called when the script is first loaded
+function OnInit()
+    print("Economy modification script initialized!")
+    ApplyEconomyChanges()
+end
+
+-- Apply economic changes
+function ApplyEconomyChanges()
+    -- Modify item prices
+    Game.ModifyItemPrices(config.priceMultiplier)
+    
+    -- Modify wages
+    Game.ModifyWorkerWages(config.wageMultiplier)
+    
+    -- Modify tax rates
+    Game.ModifyTaxRates(config.taxRate)
+    
+    print("Economy changes applied successfully")
+end
+
+-- Called when the script is unloaded
+function OnShutdown()
+    -- Restore original values
+    Game.ResetEconomyValues()
+    print("Economy values reset to defaults")
+end`,
+            metadata: {
+                category: "economy",
+                gameVersion: "1.0",
+                dependencies: []
+            }
+        },
+        'UI Enhancement': {
+            content: `-- UI Enhancement Script
+-- Description: Enhances the game UI with additional information and controls
+
+-- Configuration
+local config = {
+    showExtraInfo = true,   -- Show additional building information
+    enhancedTooltips = true, -- Show enhanced tooltips
+    quickAccessBar = true    -- Add quick access bar
+}
+
+-- Called when the script is first loaded
+function OnInit()
+    print("UI enhancement script initialized!")
+    
+    if config.showExtraInfo then
+        EnableExtraInfo()
+    end
+    
+    if config.enhancedTooltips then
+        EnableEnhancedTooltips()
+    end
+    
+    if config.quickAccessBar then
+        CreateQuickAccessBar()
+    end
+end
+
+-- Enable extra information display on buildings
+function EnableExtraInfo()
+    UI.RegisterBuildingInfoCallback(OnBuildingInfoRequest)
+    print("Extra building info enabled")
+end
+
+-- Enable enhanced tooltips
+function EnableEnhancedTooltips()
+    UI.RegisterTooltipCallback(OnTooltipRequest)
+    print("Enhanced tooltips enabled")
+end
+
+-- Create quick access bar
+function CreateQuickAccessBar()
+    local bar = UI.CreateElement("Panel", "QuickAccessBar")
+    bar:SetPosition(100, 100)
+    bar:SetSize(400, 50)
+    
+    -- Add buttons to the bar
+    AddQuickAccessButton(bar, "Market", 10, OpenMarketView)
+    AddQuickAccessButton(bar, "Dynasty", 70, OpenDynastyView)
+    AddQuickAccessButton(bar, "Politics", 130, OpenPoliticsView)
+    
+    print("Quick access bar created")
+end
+
+-- Helper to add buttons to the quick access bar
+function AddQuickAccessButton(parent, text, xPos, clickCallback)
+    local button = UI.CreateElement("Button", "QuickButton_" .. text)
+    button:SetParent(parent)
+    button:SetPosition(xPos, 10)
+    button:SetSize(50, 30)
+    button:SetText(text)
+    button:RegisterCallback("OnClick", clickCallback)
+end
+
+-- Called when building info is requested
+function OnBuildingInfoRequest(buildingId)
+    local building = Game.GetBuilding(buildingId)
+    local info = {}
+    
+    info.income = building:GetDailyIncome()
+    info.employees = building:GetEmployeeCount()
+    info.efficiency = building:GetEfficiency()
+    
+    return info
+end
+
+-- Called when a tooltip is requested
+function OnTooltipRequest(objectId, objectType)
+    if objectType == "Building" then
+        return GetBuildingTooltip(objectId)
+    elseif objectType == "Character" then
+        return GetCharacterTooltip(objectId)
+    end
+    
+    return nil
+end
+
+-- Called when the script is unloaded
+function OnShutdown()
+    UI.UnregisterCallbacks()
+    UI.DestroyElement("QuickAccessBar")
+    print("UI enhancements removed")
+end`,
+            metadata: {
+                category: "ui",
+                gameVersion: "1.0",
+                dependencies: []
+            }
+        },
+        'Character Behavior': {
+            content: `-- Character Behavior Modification Script
+-- Description: Modifies NPC AI and behavior patterns
+
+-- Configuration
+local config = {
+    improvedTrading = true,      -- Improve NPC trading decisions
+    smarter = true,              -- NPCs make smarter decisions
+    moreAggressive = false,      -- NPCs become more aggressive
+    betterDiplomacy = true       -- Improve diplomatic behavior
+}
+
+-- Called when the script is first loaded
+function OnInit()
+    print("Character behavior modification script initialized!")
+    
+    if config.improvedTrading then
+        ImproveTrading()
+    end
+    
+    if config.smarter then
+        MakeNPCsSmarter()
+    end
+    
+    if config.moreAggressive then
+        MakeNPCsMoreAggressive()
+    end
+    
+    if config.betterDiplomacy then
+        ImproveDiplomacy()
+    end
+end
+
+-- Improve NPC trading behavior
+function ImproveTrading()
+    -- Register for trading events
+    Game.RegisterEventCallback("OnTradeInitiated", OnTradeInitiated)
+    
+    -- Modify trade decision weights
+    local weights = {
+        profit = 2.0,       -- Profit is twice as important
+        reputation = 1.5,   -- Reputation is 50% more important
+        relationship = 1.2, -- Relationships are 20% more important
+        distance = 0.8      -- Distance is 20% less important
+    }
+    
+    Game.SetTradeDecisionWeights(weights)
+    print("NPC trading behavior improved")
+end
+
+-- Make NPCs smarter
+function MakeNPCsSmarter()
+    -- Improve path finding
+    Game.SetPathfindingQuality(2) -- 0=Low, 1=Medium, 2=High
+    
+    -- Improve resource management
+    Game.SetResourceManagementLevel(2) -- 0=Low, 1=Medium, 2=High
+    
+    -- Improve business decisions
+    Game.SetBusinessDecisionQuality(2) -- 0=Low, 1=Medium, 2=High
+    
+    print("NPC intelligence improved")
+end
+
+-- Make NPCs more aggressive
+function MakeNPCsMoreAggressive()
+    -- Increase aggression factors
+    local factors = {
+        territorialDisputes = 1.5,   -- 50% more territorial
+        resourceCompetition = 1.3,   -- 30% more competitive for resources
+        politicalRivalry = 1.4,      -- 40% more politically aggressive
+        familyFeud = 1.6             -- 60% more aggressive in family feuds
+    }
+    
+    Game.SetAggressionFactors(factors)
+    print("NPC aggression increased")
+end
+
+-- Improve diplomatic behavior
+function ImproveDiplomacy()
+    -- Register for diplomacy events
+    Game.RegisterEventCallback("OnDiplomaticOffer", OnDiplomaticOffer)
+    
+    -- Modify diplomatic decision weights
+    local weights = {
+        benefit = 1.5,           -- Benefits are 50% more important
+        historicalRelations = 1.2, -- Historical relations are 20% more important
+        powerDifference = 0.9,   -- Power difference is 10% less important
+        personalOpinion = 1.3    -- Personal opinion is 30% more important
+    }
+    
+    Game.SetDiplomaticDecisionWeights(weights)
+    print("NPC diplomatic behavior improved")
+end
+
+-- Event handler for trade initiation
+function OnTradeInitiated(traderId, customerId)
+    local trader = Game.GetCharacter(traderId)
+    local customer = Game.GetCharacter(customerId)
+    
+    -- Custom trade behavior logic here
+    print("Trade initiated between " .. trader:GetName() .. " and " .. customer:GetName())
+end
+
+-- Event handler for diplomatic offers
+function OnDiplomaticOffer(fromId, toId, offerType)
+    local from = Game.GetCharacter(fromId)
+    local to = Game.GetCharacter(toId)
+    
+    -- Custom diplomacy logic here
+    print("Diplomatic offer of type " .. offerType .. " from " .. from:GetName() .. " to " .. to:GetName())
+end
+
+-- Called when the script is unloaded
+function OnShutdown()
+    Game.UnregisterEventCallbacks()
+    Game.ResetBehaviorModifications()
+    print("Character behavior modifications reset")
+end`,
+            metadata: {
+                category: "gameplay",
+                gameVersion: "1.0",
+                dependencies: []
+            }
+        }
+    };
+    
+    // Show template modal
+    templateBtn.addEventListener('click', function() {
+        templateModal.classList.remove('hidden');
+    });
+    
+    // Close template modal
+    closeTemplateBtn.addEventListener('click', function() {
+        templateModal.classList.add('hidden');
+    });
+    
+    // Select template
+    templateOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            const templateName = this.querySelector('h4').textContent;
+            const template = templates[templateName];
+            
+            if (template) {
+                contentTextarea.value = template.content;
+                metadataTextarea.value = JSON.stringify(template.metadata, null, 2);
+                templateModal.classList.add('hidden');
+                
+                // Update title field with template name if it's empty
+                const titleInput = document.getElementById('title');
+                if (!titleInput.value) {
+                    titleInput.value = templateName;
+                }
+            }
+        });
+    });
+    
+    // Close modal when clicking outside
+    templateModal.addEventListener('click', function(e) {
+        if (e.target === templateModal) {
+            templateModal.classList.add('hidden');
+        }
+    });
+});
+</script>
+{% endblock %}

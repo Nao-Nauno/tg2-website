@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block title %}Download - The Guild 2: Renaissance - Reforged Mod{% endblock %}
+
+{% block content %}
+<div class="modern-card">
+    <div class="modern-card-header flex justify-between items-center">
+        <h2>Lua Script Library</h2>
+        <a href="{{ url_for('lua.create_script') }}" class="btn btn-primary">
+            <i class="fas fa-plus mr-1"></i> Create New Script
+        </a>
+    </div>
+    <div class="modern-card-content">
+        <div class="mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="form-control">
+                    <input type="text" class="form-input" placeholder="Search scripts..." id="script-search">
+                </div>
+                
+                <div class="form-control">
+                    <select class="form-input" id="script-category">
+                        <option value="all">All Categories</option>
+                        <option value="gameplay">Gameplay</option>
+                        <option value="ui">UI Mods</option>
+                        <option value="economy">Economy</option>
+                        <option value="tools">Tools & Utilities</option>
+                    </select>
+                </div>
+                
+                <div class="form-control">
+                    <select class="form-input" id="script-sort">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="popular">Most Popular</option>
+                        <option value="updated">Recently Updated</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="scripts-container">
+            {% for script in scripts %}
+                <div class="modern-card hover:transform hover:scale-[1.02] transition-transform script-card" 
+                     data-title="{{ script.title }}" data-category="{{ script.metadata.category|default('other') }}">
+                    <div class="modern-card-content p-4">
+                        <div class="flex justify-between items-start mb-3">
+                            <h3 class="font-medieval text-primary-color script-title">{{ script.title }}</h3>
+                            <div>
+                                {% if script.visibility.value == 'private' %}
+                                    <span class="px-2 py-1 bg-gray-800 text-gray-200 rounded-full text-xs">Private</span>
+                                {% elif script.visibility.value == 'unlisted' %}
+                                    <span class="px-2 py-1 bg-blue-900 text-blue-200 rounded-full text-xs">Unlisted</span>
+                                {% else %}
+                                    <span class="px-2 py-1 bg-green-900 text-green-200 rounded-full text-xs">Public</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="text-sm text-text-secondary line-clamp-3 mb-4">
+                            {{ script.description or "No description provided." }}
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center">
+                                <img src="{{ url_for('static', filename=script.owner.avatar_path) }}" 
+                                     alt="{{ script.owner.username }}" class="w-6 h-6 rounded-full mr-2">
+                                <span class="text-sm">{{ script.owner.username }}</span>
+                            </div>
+                            
+                            <div class="text-xs text-text-secondary">
+                                {{ script.updated_at.strftime('%b %d, %Y') }}
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 pt-3 border-t border-border-color flex justify-between items-center">
+                            <div class="text-xs text-text-secondary">
+                                <span class="mr-2"><i class="fas fa-code-branch"></i> v{{ script.version }}</span>
+                                <span><i class="fas fa-users"></i> {{ script.collaborators|length + 1 }}</span>
+                            </div>
+                            
+                            <a href="{{ url_for('lua.edit_script', script_id=script.id) }}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-edit mr-1"></i> Edit
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('script-search');
+    const categorySelect = document.getElementById('script-category');
+    const sortSelect = document.getElementById('script-sort');
+    const scriptsContainer = document.getElementById('scripts-container');
+    
+    // Search and filter functionality
+    function filterScripts() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const category = categorySelect.value;
+        
+        const scriptCards = document.querySelectorAll('.script-card');
+        
+        scriptCards.forEach(card => {
+            const title = card.dataset.title.toLowerCase();
+            const scriptCategory = card.dataset.category;
+            
+            const matchesSearch = title.includes(searchTerm);
+            const matchesCategory = category === 'all' || scriptCategory === category;
+            
+            card.style.display = (matchesSearch && matchesCategory) ? 'block' : 'none';
+        });
+    }
+    
+    // Sorting functionality
+    function sortScripts() {
+        const sortMethod = sortSelect.value;
+        const scriptCards = Array.from(document.querySelectorAll('.script-card'));
+        
+        scriptCards.sort((a, b) => {
+            if (sortMethod === 'newest') {
+                return new Date(b.dataset.created) - new Date(a.dataset.created);
+            } else if (sortMethod === 'oldest') {
+                return new Date(a.dataset.created) - new Date(b.dataset.created);
+            } else if (sortMethod === 'updated') {
+                return new Date(b.dataset.updated) - new Date(a.dataset.updated);
+            } else if (sortMethod === 'popular') {
+                return parseInt(b.dataset.views || 0) - parseInt(a.dataset.views || 0);
+            }
+            return 0;
+        });
+        
+        scriptsContainer.innerHTML = '';
+        scriptCards.forEach(card => scriptsContainer.appendChild(card));
+    }
+    
+    // Attach event listeners
+    searchInput.addEventListener('input', filterScripts);
+    categorySelect.addEventListener('change', filterScripts);
+    sortSelect.addEventListener('change', sortScripts);
+});
+</script>
+{% endblock %}

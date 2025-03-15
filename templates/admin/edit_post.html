@@ -1,0 +1,364 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Post - The Guild 2: Renaissance{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/trix@1.3.1/dist/trix.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/filepond@4.30.4/dist/filepond.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/filepond-plugin-image-preview@4.6.11/dist/filepond-plugin-image-preview.min.css" rel="stylesheet">
+
+<style>
+    /* Trix editor customizations */
+    trix-editor {
+        min-height: 300px;
+        max-height: 500px;
+        overflow-y: auto;
+        background-color: rgba(255, 255, 255, 0.05);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        padding: 0.75rem;
+    }
+    
+    trix-toolbar {
+        background-color: var(--card-bg);
+        border-bottom: 1px solid var(--border-color);
+        padding: 0.5rem;
+    }
+    
+    trix-toolbar .trix-button {
+        background-color: rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--border-color);
+    }
+    
+    trix-toolbar .trix-button.trix-active {
+        background-color: var(--primary-color);
+    }
+    
+    trix-toolbar .trix-button--icon {
+        filter: invert(1);
+    }
+    
+    /* Template selector */
+    .template-selector {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .template-option {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        padding: 1rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .template-option:hover {
+        border-color: var(--primary-color);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .template-option.selected {
+        border-color: var(--primary-color);
+        background-color: rgba(200, 121, 65, 0.1);
+    }
+    
+    /* Tabs for post editor */
+    .editor-tabs {
+        display: flex;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .editor-tab {
+        padding: 0.75rem 1.5rem;
+        cursor: pointer;
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+    
+    .editor-tab.active {
+        color: var(--primary-color);
+        border-bottom: 2px solid var(--primary-color);
+    }
+    
+    .tab-content {
+        display: none;
+    }
+    
+    .tab-content.active {
+        display: block;
+    }
+    
+    /* Post preview */
+    .post-preview {
+        background-color: var(--card-bg);
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    /* FilePond custom styling */
+    .filepond--panel-root {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+    }
+    
+    .filepond--drop-label {
+        color: var(--text-secondary) !important;
+    }
+    
+    .current-image {
+        margin-bottom: 1rem;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/trix@1.3.1/dist/trix.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/filepond-plugin-image-preview@4.6.11/dist/filepond-plugin-image-preview.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/filepond-plugin-file-validate-type@1.2.8/dist/filepond-plugin-file-validate-type.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/filepond@4.30.4/dist/filepond.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@4.0.0/marked.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="page-title">Edit Post</h1>
+    
+    <div class="modern-card">
+        <div class="modern-card-header">
+            <h2>Editing: {{ post.title }}</h2>
+        </div>
+        <div class="modern-card-content">
+            <!-- Tabs navigation -->
+            <div class="editor-tabs">
+                <div class="editor-tab active" data-tab="editor">Editor</div>
+                <div class="editor-tab" data-tab="templates">Templates</div>
+                <div class="editor-tab" data-tab="preview">Preview</div>
+                <div class="editor-tab" data-tab="settings">Settings</div>
+            </div>
+            
+            <form id="postForm" method="POST" action="{{ url_for('admin.edit_post', post_id=post.id) }}" enctype="multipart/form-data">
+                <!-- Editor Tab -->
+                <div class="tab-content active" id="editor-tab">
+                    <div class="form-control">
+                        <label for="title" class="form-label">Title</label>
+                        <input type="text" id="title" name="title" required class="form-input" value="{{ post.title }}">
+                    </div>
+                    
+                    <div class="form-control">
+                        <label for="content" class="form-label">Content</label>
+                        <input id="content-input" type="hidden" name="content" value="{{ post.content }}">
+                        <trix-editor input="content-input"></trix-editor>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="form-label">Featured Image</label>
+                        
+                        {% if post.image_path %}
+                            <div class="current-image mb-3">
+                                <img src="{{ url_for('static', filename=post.image_path) }}" alt="Current post image" class="w-full max-h-48 object-cover rounded-md shadow-md">
+                                <div class="p-2 text-center text-sm text-text-secondary">Current image - upload a new one to replace it</div>
+                            </div>
+                        {% endif %}
+                        
+                        <input type="file" class="form-input" name="image" accept="image/png, image/jpeg, image/gif">
+                    </div>
+                </div>
+                
+                <!-- Templates Tab -->
+                <div class="tab-content" id="templates-tab">
+                    <div class="mb-4">
+                        <label class="form-label">Select a Template</label>
+                        <div class="template-selector">
+                            <div class="template-option" data-template="announcement">
+                                <h3 class="text-lg font-medieval text-primary-color mb-2">Announcement</h3>
+                                <p class="text-sm text-text-secondary">Basic announcement with title and content.</p>
+                            </div>
+                            
+                            <div class="template-option" data-template="update">
+                                <h3 class="text-lg font-medieval text-primary-color mb-2">Update</h3>
+                                <p class="text-sm text-text-secondary">Game update with version number, features, and changes.</p>
+                            </div>
+                            
+                            <div class="template-option" data-template="guide">
+                                <h3 class="text-lg font-medieval text-primary-color mb-2">Game Guide</h3>
+                                <p class="text-sm text-text-secondary">Step-by-step guide with sections and images.</p>
+                            </div>
+                            
+                            <div class="template-option" data-template="event">
+                                <h3 class="text-lg font-medieval text-primary-color mb-2">Event</h3>
+                                <p class="text-sm text-text-secondary">Event announcement with date, description, and details.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Preview Tab -->
+                <div class="tab-content" id="preview-tab">
+                    <div class="post-preview">
+                        <h2 id="preview-title" class="text-2xl font-medieval text-primary-color mb-4">{{ post.title }}</h2>
+                        <div id="preview-content" class="prose prose-invert max-w-none">
+                            {{ post.content|safe }}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Settings Tab -->
+                <div class="tab-content" id="settings-tab">
+                    <div class="form-control">
+                        <label for="category" class="form-label">Category</label>
+                        <select id="category" name="category" class="form-input">
+                            <option value="announcement" {% if post.category == 'announcement' %}selected{% endif %}>Announcement</option>
+                            <option value="update" {% if post.category == 'update' %}selected{% endif %}>Update</option>
+                            <option value="guide" {% if post.category == 'guide' %}selected{% endif %}>Guide</option>
+                            <option value="event" {% if post.category == 'event' %}selected{% endif %}>Event</option>
+                            <option value="other" {% if post.category == 'other' or not post.category %}selected{% endif %}>Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label for="tags" class="form-label">Tags (comma separated)</label>
+                        <input type="text" id="tags" name="tags" class="form-input" placeholder="reforged, guild2, update" value="{{ post.tags }}">
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="form-label flex items-center">
+                            <input type="checkbox" name="featured" class="mr-2" {% if post.featured %}checked{% endif %}>
+                            Feature this post
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="flex justify-between mt-6">
+                    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        Update Post
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize tabs
+        const tabs = document.querySelectorAll('.editor-tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.dataset.tab;
+                
+                // Update active tab
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Show active content
+                tabContents.forEach(content => {
+                    content.classList.remove('active');
+                    if (content.id === `${tabName}-tab`) {
+                        content.classList.add('active');
+                    }
+                });
+                
+                // Update preview if preview tab is selected
+                if (tabName === 'preview') {
+                    updatePreview();
+                }
+            });
+        });
+        
+        // Initialize FilePond for image uploads
+        FilePond.registerPlugin(
+            FilePondPluginImagePreview,
+            FilePondPluginFileValidateType
+        );
+        
+        const pond = FilePond.create(document.querySelector('input.filepond'), {
+            labelIdle: 'Drag & Drop your image or <span class="filepond--label-action">Browse</span>',
+            imagePreviewHeight: 170,
+            acceptedFileTypes: ['image/png', 'image/jpeg', 'image/gif']
+        });
+        
+        // Update preview when content changes
+        const titleInput = document.getElementById('title');
+        const trixEditor = document.querySelector('trix-editor');
+        
+        titleInput.addEventListener('input', updatePreview);
+        trixEditor.addEventListener('trix-change', updatePreview);
+        
+        function updatePreview() {
+            const previewTitle = document.getElementById('preview-title');
+            const previewContent = document.getElementById('preview-content');
+            
+            previewTitle.textContent = titleInput.value || 'Post Title';
+            previewContent.innerHTML = trixEditor.innerHTML || '<p>Your content will appear here as you type...</p>';
+        }
+        
+        // Template selection
+        const templateOptions = document.querySelectorAll('.template-option');
+        
+        templateOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                // Clear previous selection
+                templateOptions.forEach(o => o.classList.remove('selected'));
+                option.classList.add('selected');
+                
+                // Apply template
+                const templateType = option.dataset.template;
+                applyTemplate(templateType);
+                
+                // Switch to editor tab
+                document.querySelector('.editor-tab[data-tab="editor"]').click();
+            });
+        });
+        
+        function applyTemplate(templateType) {
+            let templateTitle = '';
+            let templateContent = '';
+            
+            switch(templateType) {
+                case 'announcement':
+                    templateTitle = 'Important Announcement';
+                    templateContent = '<h3>Attention Guild Members!</h3><p>We have an important announcement to share with our community.</p><p>Please read the details below:</p><ul><li>Point 1</li><li>Point 2</li><li>Point 3</li></ul><p>Thank you for your continued support!</p>';
+                    break;
+                    
+                case 'update':
+                    templateTitle = 'Reforged Mod Update v2.5';
+                    templateContent = '<h3>Update v2.5 - The Prosperity Update</h3><p>We are excited to announce the release of version 2.5 of the Reforged Mod!</p><h4>New Features:</h4><ul><li>Feature 1</li><li>Feature 2</li><li>Feature 3</li></ul><h4>Bug Fixes:</h4><ul><li>Fix 1</li><li>Fix 2</li></ul><h4>Balance Changes:</h4><ul><li>Change 1</li><li>Change 2</li></ul><p>Download the update now and enjoy these new improvements!</p>';
+                    break;
+                    
+                case 'guide':
+                    templateTitle = 'Beginner\'s Guide to The Guild 2';
+                    templateContent = '<h3>Getting Started with The Guild 2: Renaissance</h3><p>Welcome to our comprehensive guide for new players!</p><h4>1. Choosing Your Profession</h4><p>The first step in your journey is selecting a profession that suits your playstyle:</p><ul><li>Craftsman: For production and trade</li><li>Scholar: For knowledge and medicine</li><li>Rogue: For theft and intrigue</li><li>Patron: For politics and influence</li></ul><h4>2. Building Your Business</h4><p>Once you\'ve selected a profession, you\'ll need to establish your business...</p><h4>3. Managing Your Dynasty</h4><p>The key to long-term success is building a strong dynasty...</p>';
+                    break;
+                    
+                case 'event':
+                    templateTitle = 'Reforged Community Tournament';
+                    templateContent = '<h3>Join Our Upcoming Tournament!</h3><p>We are excited to announce our first community tournament for The Guild 2: Renaissance Reforged Mod.</p><h4>Event Details:</h4><ul><li><strong>Date:</strong> June 15-17, 2025</li><li><strong>Time:</strong> Starting at 18:00 UTC each day</li><li><strong>Format:</strong> Round robin followed by elimination brackets</li><li><strong>Prizes:</strong> Custom titles, unique in-game items, and more!</li></ul><h4>How to Register:</h4><p>Join our Discord server and follow the registration instructions in the #tournament channel.</p><h4>Rules and Requirements:</h4><p>Participants must have the latest version of the Reforged Mod installed...</p>';
+                    break;
+            }
+            
+            // Apply to form
+            titleInput.value = templateTitle;
+            trixEditor.editor.loadHTML(templateContent);
+            
+            // Update category
+            document.getElementById('category').value = templateType;
+            
+            // Update preview
+            updatePreview();
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - The Guild 2: Renaissance{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto">
+    <div class="bg-parchment-light rounded-lg shadow-lg p-8 renaissance-frame">
+        <h2 class="renaissance-title">Register</h2>
+        
+        <form method="POST" action="{{ url_for('auth.register') }}">
+            <div class="mb-4">
+                <label for="username" class="renaissance-label">Username</label>
+                <input type="text" id="username" name="username" required
+                       class="renaissance-input w-full">
+            </div>
+            
+            <div class="mb-4">
+                <label for="email" class="renaissance-label">Email</label>
+                <input type="email" id="email" name="email" required
+                       class="renaissance-input w-full">
+            </div>
+            
+            <div class="mb-6">
+                <label for="password" class="renaissance-label">Password</label>
+                <input type="password" id="password" name="password" required
+                       class="renaissance-input w-full">
+            </div>
+            
+            <div class="mb-6">
+                <button type="submit" class="btn-renaissance w-full">
+                    Create Account
+                </button>
+            </div>
+            
+            <div class="text-center text-amber-700">
+                <p>Already have an account? <a href="{{ url_for('auth.login') }}" class="text-amber-800 hover:underline">Login</a></p>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

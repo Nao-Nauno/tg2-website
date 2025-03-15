@@ -1,0 +1,589 @@
+{% extends 'base.html' %}
+
+{% block title %}Lua Documentation - The Guild 2: Renaissance - Reforged Mod{% endblock %}
+
+{% block head %}
+{{ super() }}
+<style>
+  /* Custom styles for the documentation page */
+  .doc-sidebar {
+    height: 700px;
+    background-color: #0F1419;
+    border-right: 1px solid #2D3748;
+  }
+
+  .doc-content {
+    height: 700px;
+    background-color: #121820;
+  }
+
+  .function-item {
+    border-left: 3px solid transparent;
+    transition: all 0.2s ease;
+  }
+
+  .function-item:hover {
+    background-color: #1A202C;
+    border-left-color: #E2973F;
+  }
+
+  .function-item.active {
+    background-color: #1E2A3E;
+    border-left-color: #F0B45F;
+  }
+
+  .namespace-header {
+    background-color: #1A2027;
+    transition: all 0.2s ease;
+  }
+
+  .namespace-header:hover {
+    background-color: #1E2533;
+  }
+
+  .function-badge {
+    font-size: 0.7rem;
+    padding: 0.1rem 0.5rem;
+    border-radius: 2rem;
+    display: inline-flex;
+    align-items: center;
+    margin-right: 0.5rem;
+  }
+
+  .badge-deprecated {
+    background-color: #7B2D2D;
+    color: #FFC1C1;
+  }
+
+  .badge-new {
+    background-color: #2D5E3F;
+    color: #A7F3C4;
+  }
+
+  .code-block {
+    background-color: #161C25;
+    border: 1px solid #2D3748;
+    border-radius: 0.25rem;
+    font-family: monospace;
+  }
+
+  .param-type {
+    color: #F0B45F;
+    background-color: rgba(240, 180, 95, 0.1);
+    padding: 0.1rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.85rem;
+  }
+
+  .function-signature {
+    color: #F5D4A0;
+  }
+
+  /* Better separation between sections */
+  .details-section {
+    border-bottom: 1px solid #2D3748;
+    padding-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .details-section:last-child {
+    border-bottom: none;
+  }
+
+  /* Improved scrollbars */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #121820;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #2D3748;
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #3D4A5C;
+  }
+
+  /* Function list styling */
+  .function-namespace-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+  }
+
+  .namespace-game {
+    background-color: #5F9EA0;
+  }
+
+  .namespace-ui {
+    background-color: #9370DB;
+  }
+
+  .namespace-economy {
+    background-color: #DAA520;
+  }
+
+  /* Fixed height for function items to prevent resizing */
+  .function-item {
+    height: auto;
+    min-height: 70px;
+  }
+
+  /* Button states */
+  .filter-btn.active {
+    background-color: #F0B45F;
+    color: #0F1419;
+    font-weight: 600;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="modern-card mb-8 overflow-hidden">
+  <div class="modern-card-header bg-gradient-to-r from-[#1E2A3E] to-[#0F1419] border-b border-[#2D3748]">
+    <h2 class="text-[#F0B45F]">Lua Documentation</h2>
+  </div>
+  <div class="modern-card-content p-0">
+    <!-- Search and filter bar -->
+    <div class="p-4 border-b border-[#2D3748] bg-[#0F1419]">
+      <div class="flex flex-col md:flex-row gap-4">
+        <div class="relative flex-grow">
+          <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"></i>
+          <input type="text" class="form-input pl-10 w-full bg-[#121820] border-[#2D3748] text-gray-200" placeholder="Search functions..." id="lua-search">
+        </div>
+        
+        <div class="flex gap-2">
+          <button class="filter-btn py-2 px-4 rounded-md transition-colors" data-filter="all">All</button>
+          <button class="filter-btn py-2 px-4 rounded-md transition-colors" data-filter="Game">Game</button>
+          <button class="filter-btn py-2 px-4 rounded-md transition-colors" data-filter="UI">UI</button>
+          <button class="filter-btn py-2 px-4 rounded-md transition-colors" data-filter="Economy">Economy</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Split view layout -->
+    <div class="flex flex-col md:flex-row">
+      <!-- Sidebar function list -->
+      <div class="doc-sidebar w-full md:w-80 flex flex-col" id="sidebar-container">
+        <div class="sticky top-0 bg-[#0F1419] p-3 text-gray-400 text-sm border-b border-[#2D3748] flex justify-between items-center">
+          <div>
+            <span id="function-counter">0</span> functions found
+          </div>
+          <div class="text-xs text-gray-500">
+            <i class="fas fa-circle namespace-game"></i> Game
+            <i class="fas fa-circle namespace-ui ml-2"></i> UI
+            <i class="fas fa-circle namespace-economy ml-2"></i> Economy
+          </div>
+        </div>
+        
+        <div class="overflow-y-auto custom-scrollbar flex-grow" id="function-list">
+          {% for namespace in namespaces %}
+            <div class="namespace-section" data-namespace="{{ namespace.name }}">
+              <div class="namespace-header p-3 cursor-pointer select-none">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center">
+                    <i class="fas fa-chevron-right mr-2 text-[#F0B45F] namespace-icon"></i>
+                    <span class="font-medieval text-[#F0B45F]">{{ namespace.name }}</span>
+                  </div>
+                  <span class="text-xs text-gray-400 namespace-count">{{ namespace.functions.count() }} functions</span>
+                </div>
+              </div>
+              
+              <div class="namespace-functions hidden">
+                {% for function in namespace.functions %}
+                  <div class="function-item p-3 cursor-pointer" 
+                       data-namespace="{{ namespace.name }}" 
+                       data-function="{{ function.name }}"
+                       data-function-id="{{ function.id }}"
+                       data-search="{{ function.name|lower }} {{ function.description|lower }}">
+                    <div class="flex items-center">
+                      <span class="function-namespace-indicator namespace-{{ namespace.name|lower }}"></span>
+                      <span class="font-mono text-[#A7C5EB]">{{ function.name }}</span>
+                      
+                      <!-- Function badges -->
+                      <div class="ml-2">
+                        {% if function.is_deprecated %}
+                          <span class="function-badge badge-deprecated">
+                            <i class="fas fa-exclamation-triangle mr-1"></i> Deprecated
+                          </span>
+                        {% endif %}
+                        
+                        {% if function.added_in_version and function.added_in_version == "1.0" %}
+                          <span class="function-badge badge-new">
+                            <i class="fas fa-star mr-1"></i> New
+                          </span>
+                        {% endif %}
+                      </div>
+                    </div>
+                    
+                    <div class="text-gray-400 text-sm mt-1.5 line-clamp-2 function-preview">
+                      {{ function.description }}
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+      
+      <!-- Function details pane -->
+      <div class="doc-content flex-grow overflow-hidden flex flex-col" id="details-container">
+        <div class="flex items-center justify-center h-full text-gray-400" id="empty-state">
+          <div class="text-center p-6">
+            <i class="fas fa-code text-4xl mb-3 text-[#F0B45F]"></i>
+            <p>Select a function to view its documentation</p>
+          </div>
+        </div>
+        
+        <div id="details-content" class="hidden overflow-y-auto custom-scrollbar p-6 flex-grow">
+          <!-- Function details will be loaded here -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Templates for function details -->
+<template id="function-details-template">
+  <div class="details-section mb-6">
+    <div class="flex justify-between items-start">
+      <h3 class="text-2xl font-medieval text-[#F0B45F] function-title"></h3>
+      <div class="function-badges"></div>
+    </div>
+    <div class="mt-2 text-gray-400 function-namespace"></div>
+  </div>
+  
+  <div class="details-section">
+    <div class="p-4 code-block my-4">
+      <div class="function-signature"></div>
+    </div>
+    
+    <div class="mt-4">
+      <h4 class="text-lg font-medieval text-[#F0B45F] mb-2">Description</h4>
+      <div class="text-gray-300 function-description leading-relaxed"></div>
+    </div>
+  </div>
+  
+  <div class="details-section function-parameters-section">
+    <h4 class="text-lg font-medieval text-[#F0B45F] mb-4">Parameters</h4>
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="text-left text-gray-400 text-sm border-b border-[#2D3748]">
+          <tr>
+            <th class="pb-3 pr-4 w-1/4">Name</th>
+            <th class="pb-3 pr-4 w-1/4">Type</th>
+            <th class="pb-3">Description</th>
+          </tr>
+        </thead>
+        <tbody class="function-parameters"></tbody>
+      </table>
+    </div>
+  </div>
+  
+  <div class="details-section function-example-section">
+    <h4 class="text-lg font-medieval text-[#F0B45F] mb-4">Example</h4>
+    <div class="p-4 code-block whitespace-pre overflow-x-auto text-gray-300 function-example"></div>
+  </div>
+  
+  <div class="mt-6 text-xs text-gray-500 flex items-center">
+    <i class="fas fa-info-circle mr-2"></i>
+    <span>This documentation is for The Guild 2: Renaissance Reforged Mod v1.0</span>
+  </div>
+</template>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Cache DOM elements
+  const searchInput = document.getElementById('lua-search');
+  const filterButtons = document.querySelectorAll('.filter-btn');
+  const functionItems = document.querySelectorAll('.function-item');
+  const namespaceSections = document.querySelectorAll('.namespace-section');
+  const namespaceHeaders = document.querySelectorAll('.namespace-header');
+  const functionCounter = document.getElementById('function-counter');
+  const detailsContent = document.getElementById('details-content');
+  const emptyState = document.getElementById('empty-state');
+  const detailsContainer = document.getElementById('details-container');
+  const sidebarContainer = document.getElementById('sidebar-container');
+  
+  let activeFilter = 'all';
+  let visibleFunctions = 0;
+  let activeFunction = null;
+  
+  // Function to update the counter
+  function updateFunctionCounter() {
+    functionCounter.textContent = visibleFunctions;
+    
+    // Update namespace counters
+    namespaceSections.forEach(section => {
+      const namespace = section.dataset.namespace;
+      const visibleCount = Array.from(section.querySelectorAll('.function-item'))
+        .filter(item => item.style.display !== 'none')
+        .length;
+      
+      const countElement = section.querySelector('.namespace-count');
+      if (countElement) {
+        countElement.textContent = `${visibleCount} function${visibleCount !== 1 ? 's' : ''}`;
+      }
+    });
+  }
+  
+  // Function filtering
+  function filterFunctions() {
+    const searchTerm = searchInput.value.toLowerCase();
+    visibleFunctions = 0;
+    
+    // Filter function items
+    functionItems.forEach(item => {
+      const namespace = item.dataset.namespace;
+      const searchText = item.dataset.search;
+      
+      const matchesSearch = searchTerm === '' || searchText.includes(searchTerm);
+      const matchesFilter = activeFilter === 'all' || namespace === activeFilter;
+      
+      if (matchesSearch && matchesFilter) {
+        item.style.display = '';
+        visibleFunctions++;
+      } else {
+        item.style.display = 'none';
+      }
+    });
+    
+    // Show/hide namespace sections based on visible functions
+    namespaceSections.forEach(section => {
+      const namespace = section.dataset.namespace;
+      const hasVisibleFunctions = Array.from(section.querySelectorAll('.function-item'))
+        .some(item => item.style.display !== 'none');
+      
+      // If filter is for a specific namespace, only show that namespace
+      if ((activeFilter !== 'all' && namespace !== activeFilter) || !hasVisibleFunctions) {
+        section.style.display = 'none';
+      } else {
+        section.style.display = '';
+        
+        // Auto-expand namespace if it's the only one or if searching
+        const functionsList = section.querySelector('.namespace-functions');
+        const icon = section.querySelector('.namespace-icon');
+        
+        if (searchTerm || activeFilter !== 'all') {
+          functionsList.style.display = '';
+          if (icon) {
+            icon.classList.remove('fa-chevron-right');
+            icon.classList.add('fa-chevron-down');
+          }
+        }
+      }
+    });
+    
+    updateFunctionCounter();
+  }
+  
+  // Search functionality
+  searchInput.addEventListener('input', filterFunctions);
+  
+  // Filter buttons
+  filterButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      // Update active class
+      filterButtons.forEach(btn => btn.classList.remove('active'));
+      this.classList.add('active');
+      
+      // Set active filter
+      activeFilter = this.dataset.filter;
+      
+      // Apply filtering
+      filterFunctions();
+    });
+  });
+  
+  // Namespace toggles
+  namespaceHeaders.forEach(header => {
+    header.addEventListener('click', function() {
+      const section = this.closest('.namespace-section');
+      const functionsList = section.querySelector('.namespace-functions');
+      const icon = this.querySelector('.namespace-icon');
+      
+      // Toggle display
+      if (functionsList.classList.contains('hidden')) {
+        functionsList.classList.remove('hidden');
+        icon.classList.remove('fa-chevron-right');
+        icon.classList.add('fa-chevron-down');
+      } else {
+        functionsList.classList.add('hidden');
+        icon.classList.remove('fa-chevron-down');
+        icon.classList.add('fa-chevron-right');
+      }
+    });
+  });
+  
+  // Function item click
+  functionItems.forEach(item => {
+    item.addEventListener('click', function() {
+      // Remove active class from all items
+      functionItems.forEach(i => i.classList.remove('active'));
+      
+      // Add active class to clicked item
+      this.classList.add('active');
+      activeFunction = this;
+      
+      // Ensure consistent height of function items
+      document.querySelectorAll('.function-preview').forEach(preview => {
+        preview.classList.add('line-clamp-2');
+      });
+      
+      // Show function details
+      showFunctionDetails(
+        this.dataset.namespace,
+        this.dataset.function,
+        this.dataset.functionId
+      );
+    });
+  });
+  
+  // Show function details
+  function showFunctionDetails(namespace, functionName, functionId) {
+    // Use AJAX to load function details - with fallback
+    fetch(`/lua/api/function/${functionId}`)
+      .then(response => {
+        if (!response.ok) throw new Error('API endpoint not available');
+        return response.json();
+      })
+      .then(data => {
+        if (data.success) {
+          renderFunctionDetails(data.function);
+        } else {
+          console.error("Failed to load function details");
+          fallbackRenderFunction(namespace, functionName);
+        }
+      })
+      .catch(error => {
+        console.warn("Using fallback for function details:", error);
+        fallbackRenderFunction(namespace, functionName);
+      });
+  }
+  
+  // Fallback rendering function
+  function fallbackRenderFunction(namespace, functionName) {
+    // Find function data in DOM
+    const item = document.querySelector(`.function-item[data-namespace="${namespace}"][data-function="${functionName}"]`);
+    if (!item) return;
+    
+    const description = item.querySelector('.function-preview').textContent.trim();
+    const isDeprecated = item.querySelector('.badge-deprecated') !== null;
+    
+    // Create minimal function data
+    const functionData = {
+      name: functionName,
+      namespace: namespace,
+      description: description,
+      signature: `${namespace}.${functionName}()`,
+      parameters: [],
+      example_code: `-- Example usage of ${namespace}.${functionName}()`,
+      is_deprecated: isDeprecated
+    };
+    
+    renderFunctionDetails(functionData);
+  }
+  
+  // Render function details
+  function renderFunctionDetails(functionData) {
+    // Clone the template
+    const template = document.getElementById('function-details-template');
+    const content = template.content.cloneNode(true);
+    
+    // Fill in the details
+    content.querySelector('.function-title').textContent = functionData.name;
+    content.querySelector('.function-namespace').textContent = `Namespace: ${functionData.namespace}`;
+    content.querySelector('.function-signature').textContent = functionData.signature || `${functionData.namespace}.${functionData.name}()`;
+    content.querySelector('.function-description').textContent = functionData.description;
+    
+    // Badges (deprecated, etc.)
+    const badgesContainer = content.querySelector('.function-badges');
+    if (functionData.is_deprecated) {
+      const badge = document.createElement('span');
+      badge.className = 'function-badge badge-deprecated';
+      badge.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i> Deprecated';
+      badgesContainer.appendChild(badge);
+    }
+    
+    if (functionData.added_in_version === "1.0") {
+      const badge = document.createElement('span');
+      badge.className = 'function-badge badge-new';
+      badge.innerHTML = '<i class="fas fa-star mr-1"></i> New';
+      badgesContainer.appendChild(badge);
+    }
+    
+    // Parameters
+    const paramsContainer = content.querySelector('.function-parameters');
+    const paramsSection = content.querySelector('.function-parameters-section');
+    
+    if (functionData.parameters && functionData.parameters.length > 0) {
+      functionData.parameters.forEach(param => {
+        const row = document.createElement('tr');
+        row.className = 'border-b border-[#2D3748] hover:bg-[#1A202C]';
+        
+        row.innerHTML = `
+          <td class="py-3 pr-4 font-mono text-[#A7C5EB]">${param.name}</td>
+          <td class="py-3 pr-4">
+            <span class="param-type">${param.param_type}</span>
+            ${param.is_optional ? '<span class="text-xs text-gray-400 ml-1">optional</span>' : ''}
+          </td>
+          <td class="py-3 text-gray-300">${param.description}</td>
+        `;
+        
+        paramsContainer.appendChild(row);
+      });
+    } else {
+      paramsSection.classList.add('hidden');
+    }
+    
+    // Example code
+    const exampleSection = content.querySelector('.function-example-section');
+    const exampleContainer = content.querySelector('.function-example');
+    
+    if (functionData.example_code) {
+      exampleContainer.textContent = functionData.example_code;
+    } else {
+      exampleSection.classList.add('hidden');
+    }
+    
+    // Clear existing content and add new content
+    detailsContent.innerHTML = '';
+    detailsContent.appendChild(content);
+    
+    // Show details and hide empty state
+    emptyState.classList.add('hidden');
+    detailsContent.classList.remove('hidden');
+  }
+  
+  // Initialize
+  // Set first filter button as active
+  document.querySelector('.filter-btn[data-filter="all"]').classList.add('active');
+  
+  // Apply initial filtering
+  filterFunctions();
+  
+  // Select first function on page load
+  if (functionItems.length > 0) {
+    functionItems[0].click();
+  }
+  
+  // Handle window resize
+  window.addEventListener('resize', function() {
+    if (activeFunction) {
+      // Ensure consistent height of function items
+      document.querySelectorAll('.function-preview').forEach(preview => {
+        preview.classList.add('line-clamp-2');
+      });
+    }
+  });
+});
+</script>
+{% endblock %}

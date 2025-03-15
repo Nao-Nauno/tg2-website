@@ -1,0 +1,162 @@
+{
+  "Game": {
+    "description": "Core game functionality and state manipulation",
+    "functions": [
+      {
+        "name": "ModifyItemPrices",
+        "signature": "(multiplier)",
+        "description": "Modifies all item prices in the game by the specified multiplier.",
+        "example_code": "-- Increase all prices by 20%\nGame.ModifyItemPrices(1.2)\n\n-- Decrease all prices by 30%\nGame.ModifyItemPrices(0.7)",
+        "parameters": [
+          {
+            "name": "multiplier",
+            "param_type": "number",
+            "description": "The multiplier to apply to all item prices. Values > 1 increase prices, values < 1 decrease prices.",
+            "is_optional": false
+          }
+        ]
+      },
+      {
+        "name": "GetBuilding",
+        "signature": "(buildingId)",
+        "description": "Returns a Building object for the specified building ID.",
+        "example_code": "local building = Game.GetBuilding(42)\nprint(\"Building name: \" .. building:GetName())",
+        "parameters": [
+          {
+            "name": "buildingId",
+            "param_type": "number",
+            "description": "The unique ID of the building to retrieve.",
+            "is_optional": false
+          }
+        ]
+      },
+      {
+        "name": "GetCharacter",
+        "signature": "(characterId)",
+        "description": "Returns a Character object for the specified character ID.",
+        "example_code": "local character = Game.GetCharacter(123)\nprint(\"Character name: \" .. character:GetName())",
+        "parameters": [
+          {
+            "name": "characterId",
+            "param_type": "number",
+            "description": "The unique ID of the character to retrieve.",
+            "is_optional": false
+          }
+        ]
+      },
+      {
+        "name": "ResetEconomyValues",
+        "signature": "()",
+        "description": "Resets all economy values to their default settings.",
+        "example_code": "-- After applying modifications, reset to defaults\nGame.ResetEconomyValues()",
+        "parameters": []
+      }
+    ]
+  },
+  "UI": {
+    "description": "User interface creation and manipulation",
+    "functions": [
+      {
+        "name": "CreateElement",
+        "signature": "(type, id)",
+        "description": "Creates a new UI element of the specified type with the given ID.",
+        "example_code": "local panel = UI.CreateElement(\"Panel\", \"MyPanel\")\npanel:SetPosition(100, 100)\npanel:SetSize(200, 150)",
+        "parameters": [
+          {
+            "name": "type",
+            "param_type": "string",
+            "description": "The type of UI element to create (Panel, Button, Label, etc.)",
+            "is_optional": false
+          },
+          {
+            "name": "id",
+            "param_type": "string",
+            "description": "A unique identifier for the element.",
+            "is_optional": false
+          }
+        ]
+      },
+      {
+        "name": "RegisterTooltipCallback",
+        "signature": "(callback)",
+        "description": "Registers a callback function to be called when a tooltip is requested.",
+        "example_code": "UI.RegisterTooltipCallback(OnTooltipRequest)\n\nfunction OnTooltipRequest(objectId, objectType)\n  return \"Custom tooltip for \" .. objectType .. \" #\" .. objectId\nend",
+        "parameters": [
+          {
+            "name": "callback",
+            "param_type": "function",
+            "description": "A function that will be called when a tooltip is requested. Should accept objectId and objectType parameters.",
+            "is_optional": false
+          }
+        ]
+      },
+      {
+        "name": "DestroyElement",
+        "signature": "(id)",
+        "description": "Destroys a UI element with the specified ID.",
+        "example_code": "-- Remove a UI element when no longer needed\nUI.DestroyElement(\"MyPanel\")",
+        "parameters": [
+          {
+            "name": "id",
+            "param_type": "string",
+            "description": "The ID of the element to destroy.",
+            "is_optional": false
+          }
+        ]
+      }
+    ]
+  },
+  "Economy": {
+    "description": "Economy-related functions for modifying prices, wages, and taxes",
+    "functions": [
+      {
+        "name": "ModifyTaxRates",
+        "signature": "(multiplier)",
+        "description": "Modifies all tax rates in the game by the specified multiplier.",
+        "example_code": "-- Reduce taxes to 75% of normal\nEconomy.ModifyTaxRates(0.75)",
+        "parameters": [
+          {
+            "name": "multiplier",
+            "param_type": "number",
+            "description": "The multiplier to apply to all tax rates. Values < 1 decrease taxes, values > 1 increase taxes.",
+            "is_optional": false
+          }
+        ]
+      },
+      {
+        "name": "ModifyWorkerWages",
+        "signature": "(multiplier)",
+        "description": "Modifies all worker wages in the game by the specified multiplier.",
+        "example_code": "-- Increase wages by 10%\nEconomy.ModifyWorkerWages(1.1)",
+        "parameters": [
+          {
+            "name": "multiplier",
+            "param_type": "number",
+            "description": "The multiplier to apply to all worker wages. Values > 1 increase wages, values < 1 decrease wages.",
+            "is_optional": false
+          }
+        ]
+      },
+      {
+        "name": "GetTaxRateForBuilding",
+        "signature": "(buildingId, taxType)",
+        "description": "Gets the current tax rate for a specific building and tax type.",
+        "example_code": "local propertyTax = Economy.GetTaxRateForBuilding(42, \"property\")\nprint(\"Property tax rate: \" .. propertyTax)",
+        "parameters": [
+          {
+            "name": "buildingId",
+            "param_type": "number",
+            "description": "The ID of the building to check.",
+            "is_optional": false
+          },
+          {
+            "name": "taxType",
+            "param_type": "string",
+            "description": "The type of tax to check (\"property\", \"income\", \"sales\", etc.)",
+            "is_optional": false
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,579 @@
+{% extends 'base.html' %}
+
+{% block title %}Download - The Guild 2: Renaissance - Reforged Mod{% endblock %}
+
+{% block content %}
+<div class="modern-card mb-6">
+    <div class="modern-card-header flex justify-between items-center">
+        <div class="flex items-center">
+            <h2 id="script-title">{{ script.title }}</h2>
+            {% if current_user.id == script.owner_id %}
+                <button id="edit-title-btn" class="ml-2 text-primary-color hover:text-accent-color">
+                    <i class="fas fa-edit"></i>
+                </button>
+            {% endif %}
+        </div>
+        
+        <div class="flex items-center space-x-3">
+            <span class="text-text-secondary">Version {{ script.version }}</span>
+            
+            <div class="relative group">
+                <button class="btn btn-secondary btn-sm">
+                    <i class="fas fa-share-alt mr-1"></i> Share
+                </button>
+                <div class="hidden group-hover:block absolute right-0 mt-2 w-64 bg-card-bg border border-border-color rounded shadow-lg z-10 p-3">
+                    <h4 class="font-medieval text-primary-color mb-2">Share Options</h4>
+                    
+                    <div class="form-control mb-3">
+                        <label class="text-sm mb-1 block">Visibility</label>
+                        <select class="form-input" id="visibility-select">
+                            <option value="private" {% if script.visibility.value == 'private' %}selected{% endif %}>Private</option>
+                            <option value="unlisted" {% if script.visibility.value == 'unlisted' %}selected{% endif %}>Unlisted</option>
+                            <option value="public" {% if script.visibility.value == 'public' %}selected{% endif %}>Public</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="text-sm mb-1 block">Share Link</label>
+                        <div class="flex">
+                            <input type="text" class="form-input text-xs" value="{{ request.url }}" readonly id="share-link">
+                            <button class="btn btn-secondary btn-sm ml-1" onclick="copyShareLink()">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="relative group">
+                <button class="btn btn-primary btn-sm">
+                    <i class="fas fa-save mr-1"></i> Save
+                </button>
+                <div class="hidden group-hover:block absolute right-0 mt-2 w-64 bg-card-bg border border-border-color rounded shadow-lg z-10 p-3">
+                    <h4 class="font-medieval text-primary-color mb-2">Save Options</h4>
+                    
+                    <div class="form-control mb-3">
+                        <label class="text-sm mb-1 block">Version Comment</label>
+                        <input type="text" class="form-input" placeholder="Describe your changes...">
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <button class="btn btn-secondary btn-sm">Save</button>
+                        <button class="btn btn-primary btn-sm">Save as New Version</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modern-card-content p-0">
+        <div class="flex" style="height: 70vh; min-height: 600px;">
+            <!-- Editor area -->
+            <div class="flex-grow" id="monaco-editor" style="height: 100%; min-height: 600px;"></div>
+            
+            <!-- Collaborators sidebar -->
+            <div class="w-64 border-l border-border-color bg-darker-bg p-4" id="collaborators-panel">
+                <h3 class="font-medieval text-primary-color mb-3">Collaborators</h3>
+                
+                <div class="space-y-3 mb-4">
+                    <!-- Owner -->
+                    <div class="flex items-center">
+                        <img src="{{ url_for('static', filename=script.owner.avatar_path) }}" alt="{{ script.owner.username }}" 
+                             class="w-8 h-8 rounded-full mr-2 border border-accent-color">
+                        <div>
+                            <div class="flex items-center">
+                                <span>{{ script.owner.username }}</span>
+                                <span class="ml-2 px-2 py-0.5 bg-primary-color text-white text-xs rounded-full">Owner</span>
+                            </div>
+                            {% if collaborator_statuses and script.owner_id in collaborator_statuses %}
+                                <div class="text-xs text-green-400">Online</div>
+                            {% else %}
+                                <div class="text-xs text-text-secondary">Offline</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Collaborators -->
+                    {% for collab in script.collaborators %}
+                        <div class="flex items-center">
+                            <img src="{{ url_for('static', filename=collab.user.avatar_path) }}" alt="{{ collab.user.username }}" 
+                                 class="w-8 h-8 rounded-full mr-2 border border-accent-color">
+                            <div>
+                                <div class="flex items-center">
+                                    <span>{{ collab.user.username }}</span>
+                                    <span class="ml-2 px-2 py-0.5 bg-accent-color text-white text-xs rounded-full">{{ collab.role.value|capitalize }}</span>
+                                </div>
+                                {% if collaborator_statuses and collab.user_id in collaborator_statuses %}
+                                    <div class="text-xs text-green-400">Online</div>
+                                {% else %}
+                                    <div class="text-xs text-text-secondary">Offline</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                {% if script.get_collaborator_role(current_user.id) == CollaboratorRole.OWNER %}
+                    <button id="add-collaborator-btn" class="btn btn-secondary btn-sm w-full">
+                        <i class="fas fa-user-plus mr-1"></i> Add Collaborator
+                    </button>
+                {% endif %}
+                
+                <div class="mt-6">
+                    <h3 class="font-medieval text-primary-color mb-3">Script Info</h3>
+                    <div class="text-sm text-text-secondary">
+                        <div>Created: {{ script.created_at.strftime('%b %d, %Y') }}</div>
+                        <div>Last updated: {{ script.updated_at.strftime('%b %d, %Y') }}</div>
+                        {% if script.tags %}
+                            <div class="mt-2">
+                                Tags:
+                                <div class="flex flex-wrap gap-1 mt-1">
+                                    {% for tag in script.tags.split(',') %}
+                                        <span class="px-2 py-0.5 bg-primary-color/10 text-primary-color rounded-full text-xs">{{ tag }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Version history card -->
+<div class="modern-card">
+    <div class="modern-card-header">
+        <h2>Version History</h2>
+    </div>
+    <div class="modern-card-content p-0">
+        <div class="divide-y divide-border-color max-h-96 overflow-y-auto">
+            {% for version in script.versions|sort(attribute='version_number', reverse=true) %}
+                <div class="p-4 hover:bg-primary-color/5 transition-colors">
+                    <div class="flex justify-between items-center mb-1">
+                        <div class="flex items-center">
+                            <span class="font-medieval text-primary-color">Version {{ version.version_number }}</span>
+                            {% if version.version_number == script.version %}
+                                <span class="ml-2 px-2 py-0.5 bg-primary-color text-white text-xs rounded-full">Current</span>
+                            {% endif %}
+                        </div>
+                        <span class="text-sm text-text-secondary">{{ version.created_at.strftime('%b %d, %Y at %H:%M') }}</span>
+                    </div>
+                    
+                    <div class="flex items-center mb-2">
+                        <img src="{{ url_for('static', filename=version.created_by.avatar_path) }}" alt="{{ version.created_by.username }}" 
+                             class="w-6 h-6 rounded-full mr-2">
+                        <span class="text-sm">{{ version.created_by.username }}</span>
+                    </div>
+                    
+                    {% if version.comment %}
+                        <div class="text-sm">{{ version.comment }}</div>
+                    {% endif %}
+                    
+                    <div class="flex justify-end space-x-2 mt-2">
+                        <button class="text-sm text-primary-color hover:text-accent-color" 
+                                onclick="viewVersion({{ version.version_number }})">
+                            <i class="fas fa-eye mr-1"></i> View
+                        </button>
+                        
+                        {% if version.version_number != script.version %}
+                            <button class="text-sm text-primary-color hover:text-accent-color"
+                                    onclick="restoreVersion({{ version.version_number }})">
+                                <i class="fas fa-undo mr-1"></i> Restore
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Add Collaborator Modal -->
+<div id="add-collaborator-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-card-bg rounded-lg shadow-xl w-full max-w-md p-6">
+        <h3 class="text-xl font-medieval text-primary-color mb-4">Add Collaborator</h3>
+        
+        <div class="form-control mb-4">
+            <label class="form-label">Username</label>
+            <input type="text" id="collaborator-username" class="form-input" placeholder="Enter username">
+        </div>
+        
+        <div class="form-control mb-6">
+            <label class="form-label">Role</label>
+            <select id="collaborator-role" class="form-input">
+                <option value="viewer">Viewer (can only view)</option>
+                <option value="editor">Editor (can edit)</option>
+            </select>
+        </div>
+        
+        <div class="flex justify-end space-x-3">
+            <button id="cancel-add-collaborator" class="btn btn-secondary">
+                Cancel
+            </button>
+            <button id="confirm-add-collaborator" class="btn btn-primary">
+                Add Collaborator
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
+<script>
+    let editor;
+    let socket;
+    const scriptId = {{ script.id }};
+    let currentUserId = {{ current_user.id }};
+    
+    require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs' }});
+    
+    require(['vs/editor/editor.main'], function() {
+        // Define Lua language
+        monaco.languages.register({ id: 'lua' });
+        monaco.languages.setMonarchTokensProvider('lua', {
+            // Lua syntax definition
+            defaultToken: '',
+            tokenPostfix: '.lua',
+            keywords: [
+                'and', 'break', 'do', 'else', 'elseif', 'end', 'false', 'for', 'function', 'if', 
+                'in', 'local', 'nil', 'not', 'or', 'repeat', 'return', 'then', 'true', 'until', 'while'
+            ],
+            brackets: [
+                { open: '{', close: '}', token: 'delimiter.curly' },
+                { open: '[', close: ']', token: 'delimiter.bracket' },
+                { open: '(', close: ')', token: 'delimiter.parenthesis' }
+            ],
+            operators: [
+                '+', '-', '*', '/', '%', '^', '#', '==', '~=', '<=', '>=', '<', '>', '=', 
+                ';', ':', ',', '.', '..', '...'
+            ],
+            symbols: /[=><!~?:&|+\-*\/\^%]+/,
+            escapes: /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,
+            
+            tokenizer: {
+                root: [
+                    // Comments
+                    [/--\[\[.*\]\]/, 'comment'],
+                    [/--.*$/, 'comment'],
+                    
+                    // Strings
+                    [/"([^"\\]|\\.)*$/, 'string.invalid'],
+                    [/'([^'\\]|\\.)*$/, 'string.invalid'],
+                    [/"/, 'string', '@string_double'],
+                    [/'/, 'string', '@string_single'],
+                    [/\[(=*)\[/, { token: 'string.quote', next: '@string_multiline.$1' }],
+                    
+                    // Numbers
+                    [/0[xX][0-9a-fA-F]+/, 'number.hex'],
+                    [/\d+(\.\d+)?([eE][+-]?\d+)?/, 'number'],
+                    
+                    // Identifiers and keywords
+                    [/[a-zA-Z_]\w*/, {
+                        cases: {
+                            '@keywords': { token: 'keyword.$0' },
+                            '@default': 'identifier'
+                        }
+                    }],
+                    
+                    // Delimiters and operators
+                    [/[\{\}\[\]\(\)]/, '@brackets'],
+                    [/@symbols/, {
+                        cases: {
+                            '@operators': 'operator',
+                            '@default': ''
+                        }
+                    }],
+                    
+                    // Whitespace
+                    [/\s+/, '']
+                ],
+                
+                string_double: [
+                    [/[^\\"]+/, 'string'],
+                    [/@escapes/, 'string.escape'],
+                    [/\\./, 'string.escape.invalid'],
+                    [/"/, 'string', '@pop']
+                ],
+                
+                string_single: [
+                    [/[^\\']+/, 'string'],
+                    [/@escapes/, 'string.escape'],
+                    [/\\./, 'string.escape.invalid'],
+                    [/'/, 'string', '@pop']
+                ],
+                
+                string_multiline: [
+                    [/[^\]]+/, 'string'],
+                    [/\]/, 'string', '@string_multiline_end.$S2']
+                ],
+                
+                string_multiline_end: [
+                    [/\]=*\]/, {
+                        cases: {
+                            '$S2==$1': { token: 'string.quote', next: '@pop' },
+                            '@default': { token: 'string' }
+                        }
+                    }],
+                    [/.*/, 'string']
+                ]
+            }
+        });
+        
+        const editorContainer = document.getElementById('monaco-editor');
+        editor = monaco.editor.create(editorContainer, {
+            value: `{{ script.content|safe }}`,
+            language: 'lua',
+            theme: 'vs-dark',
+            automaticLayout: true,
+            minimap: { enabled: true },
+            scrollBeyondLastLine: false,
+            fixedOverflowWidgets: true
+        });
+
+        // Handle window resize to ensure editor fills space properly
+        window.addEventListener('resize', function() {
+            editor.layout();
+        });
+
+        // Force layout recalculation
+        setTimeout(() => {
+            editor.layout();
+        }, 100);
+
+        // Add a mutation observer to detect any parent container size changes
+        const resizeObserver = new ResizeObserver(() => {
+            editor.layout();
+        });
+        resizeObserver.observe(editorContainer.parentElement);
+        
+        // Set up real-time collaboration
+        setupWebSocketConnection();
+        
+        // Set up edit events to send changes
+        let changeTimeout;
+        editor.onDidChangeModelContent((event) => {
+            clearTimeout(changeTimeout);
+            changeTimeout = setTimeout(() => {
+                const changes = event.changes;
+                sendChanges(changes);
+            }, 100);
+        });
+    });
+    
+// Find the setupWebSocketConnection function
+function setupWebSocketConnection() {
+    // Try to connect but have a fallback if it fails
+    console.log(`Attempting to connect to WebSocket at ws://127.0.0.1:8765/ws/script/${scriptId}`);
+    
+    try {
+        socket = new WebSocket(`ws://127.0.0.1:8765/ws/script/${scriptId}`);
+        
+        socket.onopen = function(e) {
+            console.log('WebSocket connection established');
+            // Send initial message with user ID
+            socket.send(JSON.stringify({
+                user_id: currentUserId || {{ current_user.id }}
+            }));
+        };
+        
+        socket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            if (data.type === 'script_change') {
+                applyChanges(data.changes);
+            } else if (data.type === 'collaborator_status') {
+                updateCollaboratorStatus(data.user_id, data.status);
+            }
+        };
+        
+        socket.onclose = function(event) {
+            console.log('WebSocket connection closed', event);
+            // If connection fails, don't continuously retry - switch to fallback mode
+            if (!event.wasClean) {
+                console.log("Switching to offline editing mode");
+                enableOfflineEditing();
+            } else {
+                // Only retry if it was a clean close
+                setTimeout(setupWebSocketConnection, 3000);
+            }
+        };
+        
+        socket.onerror = function(error) {
+            console.error('WebSocket error:', error);
+        };
+    } catch (e) {
+        console.error("Error setting up WebSocket:", e);
+        enableOfflineEditing();
+    }
+}
+
+// Add this new function for offline editing
+function enableOfflineEditing() {
+    console.log("Editor running in offline mode - changes will not be synchronized");
+    
+    // Create a fake socket object
+    socket = {
+        send: function(msg) { 
+            console.log("Would send message (offline mode):", msg);
+        },
+        readyState: WebSocket.OPEN // Pretend we're connected
+    };
+    
+    // Update UI to show offline status
+    const offlineNotice = document.createElement('div');
+    offlineNotice.className = 'fixed top-4 right-4 bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+    offlineNotice.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i> Offline Mode - Changes won\'t be saved automatically';
+    document.body.appendChild(offlineNotice);
+    
+    // Add a manual save button
+    const saveButton = document.createElement('button');
+    saveButton.className = 'fixed bottom-4 right-4 bg-primary-color text-white px-6 py-3 rounded-lg shadow-lg z-50';
+    saveButton.innerHTML = '<i class="fas fa-save mr-2"></i> Save Changes';
+    saveButton.onclick = function() {
+        saveChangesManually();
+    };
+    document.body.appendChild(saveButton);
+}
+
+// Add a function to manually save changes
+function saveChangesManually() {
+    const content = editor.getValue();
+    
+    fetch(`/api/scripts/${scriptId}/save`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            content: content,
+            version_comment: "Manual save (offline mode)"
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            const successNotice = document.createElement('div');
+            successNotice.className = 'fixed bottom-20 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+            successNotice.textContent = 'Changes saved successfully!';
+            document.body.appendChild(successNotice);
+            
+            // Remove the message after 3 seconds
+            setTimeout(() => {
+                document.body.removeChild(successNotice);
+            }, 3000);
+        } else {
+            alert('Error saving changes: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        alert('Error saving changes: ' + error);
+    });
+}
+
+// Also modify the sendChanges function to handle offline mode
+function sendChanges(changes) {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        try {
+            socket.send(JSON.stringify({
+                type: 'script_change',
+                changes: changes,
+                version: {{ script.version }}
+            }));
+        } catch (e) {
+            console.error("Error sending changes:", e);
+        }
+    }
+}
+    
+    function applyChanges(changes) {
+        // Apply changes from other users
+        // This will depend on your operational transform implementation
+        // For simplicity, this example just does a basic text update
+        editor.getModel().applyEdits(changes.map(change => ({
+            range: monaco.Range.fromPositions(
+                editor.getModel().getPositionAt(change.rangeOffset),
+                editor.getModel().getPositionAt(change.rangeOffset + change.rangeLength)
+            ),
+            text: change.text
+        })));
+    }
+    
+    function updateCollaboratorStatus(userId, status) {
+        // Update UI to show collaborator status
+        const collaboratorsPanel = document.getElementById('collaborators-panel');
+        // Find the user element and update status
+    }
+    
+    function copyShareLink() {
+        const shareLink = document.getElementById('share-link');
+        shareLink.select();
+        document.execCommand('copy');
+        
+        // Show a copied message
+        const tempAlert = document.createElement('div');
+        tempAlert.className = 'fixed bottom-4 right-4 bg-primary-color text-white px-4 py-2 rounded-lg shadow-lg z-50';
+        tempAlert.textContent = 'Link copied to clipboard!';
+        document.body.appendChild(tempAlert);
+        
+        setTimeout(() => {
+            document.body.removeChild(tempAlert);
+        }, 2000);
+    }
+    
+    function viewVersion(versionNumber) {
+        fetch(`/api/scripts/${scriptId}/versions/${versionNumber}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    editor.setValue(data.content);
+                }
+            });
+    }
+    
+    function restoreVersion(versionNumber) {
+        if (confirm(`Are you sure you want to restore version ${versionNumber}?`)) {
+            fetch(`/api/scripts/${scriptId}/restore/${versionNumber}`, {
+                method: 'POST'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.reload();
+                    }
+                });
+        }
+    }
+    
+    // Modal controls
+    document.getElementById('add-collaborator-btn').addEventListener('click', function() {
+        document.getElementById('add-collaborator-modal').classList.remove('hidden');
+    });
+    
+    document.getElementById('cancel-add-collaborator').addEventListener('click', function() {
+        document.getElementById('add-collaborator-modal').classList.add('hidden');
+    });
+    
+    document.getElementById('confirm-add-collaborator').addEventListener('click', function() {
+        const username = document.getElementById('collaborator-username').value;
+        const role = document.getElementById('collaborator-role').value;
+        
+        fetch(`/api/scripts/${scriptId}/collaborators`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                username: username,
+                role: role
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert(data.error);
+                }
+            });
+    });
+</script>
+{% endblock %}

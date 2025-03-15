@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Profile - The Guild 2: Renaissance{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="page-title">Edit Your Profile</h1>
+    
+    <div class="modern-card">
+        <div class="modern-card-header">
+            <h2>Profile Settings</h2>
+        </div>
+        <div class="modern-card-content">
+            <form method="POST" enctype="multipart/form-data">
+                <!-- Profile information -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="form-control">
+                        <label for="title" class="form-label">Title</label>
+                        <input type="text" id="title" name="title" class="form-input" 
+                               value="{{ current_user.title or '' }}" placeholder="e.g. Master Craftsman">
+                    </div>
+                    
+                    <div class="form-control">
+                        <label for="location" class="form-label">Location</label>
+                        <input type="text" id="location" name="location" class="form-input" 
+                               value="{{ current_user.location or '' }}" placeholder="e.g. London, UK">
+                    </div>
+                </div>
+                
+                <div class="form-control mb-6">
+                    <label for="bio" class="form-label">Biography</label>
+                    <textarea id="bio" name="bio" class="form-input h-32" 
+                              placeholder="Tell us about yourself and your experience with The Guild 2...">{{ current_user.bio or '' }}</textarea>
+                </div>
+                
+                <!-- Social links -->
+                <h3 class="text-xl font-medieval text-primary-color mb-4">Social Links</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="form-control">
+                        <label for="website" class="form-label">Website</label>
+                        <input type="url" id="website" name="website" class="form-input" 
+                               value="{{ current_user.website or '' }}" placeholder="https://yourdomain.com">
+                    </div>
+                    
+                    <div class="form-control">
+                        <label for="discord" class="form-label">Discord Username</label>
+                        <input type="text" id="discord" name="discord" class="form-input" 
+                               value="{{ current_user.discord or '' }}" placeholder="username#0000">
+                    </div>
+                </div>
+                
+                <div class="form-control mb-6">
+                    <label for="steam_id" class="form-label">Steam ID</label>
+                    <input type="text" id="steam_id" name="steam_id" class="form-input" 
+                           value="{{ current_user.steam_id or '' }}" placeholder="Your Steam username">
+                </div>
+                
+                <!-- Game preferences -->
+                <h3 class="text-xl font-medieval text-primary-color mb-4">Game Preferences</h3>
+                
+                <div class="form-control mb-6">
+                    <label for="favorite_profession" class="form-label">Favorite Profession</label>
+                    <select id="favorite_profession" name="favorite_profession" class="form-input">
+                        <option value="">Select a profession...</option>
+                        <option value="Craftsman" {% if current_user.favorite_profession == 'Craftsman' %}selected{% endif %}>Craftsman</option>
+                        <option value="Scholar" {% if current_user.favorite_profession == 'Scholar' %}selected{% endif %}>Scholar</option>
+                        <option value="Rogue" {% if current_user.favorite_profession == 'Rogue' %}selected{% endif %}>Rogue</option>
+                        <option value="Patron" {% if current_user.favorite_profession == 'Patron' %}selected{% endif %}>Patron</option>
+                    </select>
+                </div>
+                
+                <!-- Profile images -->
+                <h3 class="text-xl font-medieval text-primary-color mb-4">Profile Images</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="form-control">
+                        <label for="avatar" class="form-label">Avatar</label>
+                        <div class="mb-2">
+                            <img src="{{ url_for('static', filename=current_user.avatar_path) }}" alt="Current avatar" 
+                                 class="w-20 h-20 rounded-full border border-border-color object-cover">
+                        </div>
+                        <input type="file" id="avatar" name="avatar" class="form-input" accept="image/*">
+                    </div>
+                    
+                    <div class="form-control">
+                        <label for="banner" class="form-label">Profile Banner</label>
+                        <div class="mb-2">
+                            <img src="{{ url_for('static', filename=current_user.banner_path) }}" alt="Current banner" 
+                                 class="w-full h-16 object-cover rounded border border-border-color">
+                        </div>
+                        <input type="file" id="banner" name="banner" class="form-input" accept="image/*">
+                    </div>
+                </div>
+                
+                <div class="flex justify-between">
+                    <a href="{{ url_for('user.profile', username=current_user.username) }}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - The Guild 2: Renaissance{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto">
+    <div class="bg-parchment-light rounded-lg shadow-lg p-8 renaissance-frame">
+        <h2 class="renaissance-title">Login</h2>
+        
+        <form method="POST" action="{{ url_for('auth.login') }}">
+            <div class="mb-4">
+                <label for="username" class="renaissance-label">Username</label>
+                <input type="text" id="username" name="username" required
+                       class="renaissance-input w-full">
+            </div>
+            
+            <div class="mb-6">
+                <label for="password" class="renaissance-label">Password</label>
+                <input type="password" id="password" name="password" required
+                       class="renaissance-input w-full">
+            </div>
+            
+            <div class="mb-6">
+                <button type="submit" class="btn-renaissance w-full">
+                    Sign In
+                </button>
+            </div>
+            
+            <div class="text-center text-amber-700">
+                <p>Don't have an account? <a href="{{ url_for('auth.register') }}" class="text-amber-800 hover:underline">Register</a></p>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,135 @@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"> 
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/navigation.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+
+<div id="tabContainer" class="nav-header">
+    <div class="main-nav bg-gray-900 py-3 px-6 flex items-center justify-between">
+        <!-- Logo & Site Title -->
+        <a href="/" class="home-button flex items-center">
+            <img src="{{ url_for('static', filename='images/guild2_logo.png') }}" alt="Guild 2" class="h-10 mr-3">
+            <span class="home-text text-xl font-medieval text-amber-200">Reforged</span>
+        </a>
+
+        <!-- Main Navigation -->
+        <nav class="hidden md:flex items-center space-x-6">
+            <!-- Home -->
+            <div class="nav-item relative group">
+                <a href="/" class="text-amber-200 hover:text-white font-medieval transition-colors">
+                    Home
+                </a>
+            </div>
+            
+            <!-- About -->
+            <div class="nav-item relative group">
+                <a href="/about" class="text-amber-200 hover:text-white font-medieval transition-colors">
+                    About
+                </a>
+            </div>
+        </nav>
+        
+        <!-- User Menu / Search -->
+        <div class="flex items-center space-x-4">
+            <!-- Search Button -->
+            <button class="text-amber-200 hover:text-white transition-colors" id="search-toggle">
+                <i class="fas fa-search"></i>
+            </button>
+            
+            <!-- User Menu -->
+            {% if current_user.is_authenticated %}
+                <div class="nav-item relative group">
+                    <div class="flex items-center text-amber-200 cursor-pointer">
+                        <img src="{{ url_for('static', filename=current_user.avatar_path) }}" alt="User Avatar" class="h-8 w-8 rounded-full border-2 border-amber-600 mr-2">
+                        <span class="font-medieval">{{ current_user.username }}</span>
+                    </div>
+                    <div class="dropdown-menu absolute hidden group-hover:block right-0 bg-gray-800 border border-amber-900 rounded shadow-lg py-2 w-48 z-50">
+                        <a href="{{ url_for('user.profile', username=current_user.username) }}" class="block px-4 py-2 text-amber-200 hover:bg-gray-700 transition-colors">
+                            <i class="fas fa-user-circle"></i> My Profile
+                        </a>
+                        <a href="{{ url_for('user.edit_profile') }}" class="block px-4 py-2 text-amber-200 hover:bg-gray-700 transition-colors">
+                            <i class="fas fa-cog"></i> Edit Profile
+                        </a>
+                        <a href="/lua/scripts" class="block px-4 py-2 text-amber-200 hover:bg-gray-700 transition-colors">
+                            <i class="fas fa-code"></i> My Scripts
+                        </a>
+                        {% if current_user.is_admin %}
+                            <a href="{{ url_for('admin.dashboard') }}" class="block px-4 py-2 text-amber-200 hover:bg-gray-700 transition-colors">
+                                <i class="fas fa-crown"></i> Admin Dashboard
+                            </a>
+                        {% endif %}
+                        <div class="border-t border-amber-900 my-1"></div>
+                        <a href="{{ url_for('auth.logout') }}" class="block px-4 py-2 text-amber-200 hover:bg-gray-700 transition-colors">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            {% else %}
+                <div class="flex items-center space-x-4">
+                    <a href="{{ url_for('auth.login') }}" class="text-amber-200 hover:text-white font-medieval transition-colors">
+                        <i class="fas fa-sign-in-alt mr-1"></i> Login
+                    </a>
+                    <a href="{{ url_for('auth.register') }}" class="text-amber-200 hover:text-white font-medieval transition-colors">
+                        <i class="fas fa-user-plus mr-1"></i> Register
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Mobile Menu Button -->
+        <button class="md:hidden text-amber-200 focus:outline-none" id="mobile-menu-button">
+            <i class="fas fa-bars text-xl"></i>
+        </button>
+    </div>
+    
+    <!-- Mobile Menu (hidden by default) -->
+    <div id="mobile-menu" class="hidden md:hidden bg-gray-800 border-t border-amber-900">
+        <div class="py-2 px-4">
+            <a href="/" class="block py-2 text-amber-200 hover:text-white font-medieval">Home</a>
+            <a href="/about" class="block py-2 text-amber-200 hover:text-white font-medieval">About</a>
+            <a href="/reforged" class="block py-2 text-amber-200 hover:text-white font-medieval">Reforged Mod</a>
+            <a href="/lua/editor" class="block py-2 text-amber-200 hover:text-white font-medieval">Lua Editor</a>
+            <a href="/tools" class="block py-2 text-amber-200 hover:text-white font-medieval">Tools</a>
+            <a href="/forum" class="block py-2 text-amber-200 hover:text-white font-medieval">Community</a>
+            <a href="https://gitlab.com/guild2reforged" class="block py-2 text-amber-200 hover:text-white font-medieval">GitLab</a>
+            <a href="https://discord.gg/guild2reforged" class="block py-2 text-amber-200 hover:text-white font-medieval">Discord</a>
+        </div>
+    </div>
+</div>
+
+<!-- Discord connection status indicator -->
+<div id="discord-status" class="fixed bottom-4 left-4 bg-gray-800 border border-green-600 rounded-lg shadow-lg p-2 z-40 flex items-center text-sm">
+    <div class="w-3 h-3 bg-green-500 rounded-full mr-2 animate-pulse"></div>
+    <span class="text-green-400">Connected to Discord</span>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Search toggle
+    const searchToggle = document.getElementById('search-toggle');
+    const searchContainer = document.getElementById('search-container');
+    
+    searchToggle.addEventListener('click', function() {
+        searchContainer.classList.toggle('hidden');
+        searchContainer.querySelector('input').focus();
+    });
+    
+    // Mobile menu toggle
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    
+    mobileMenuButton.addEventListener('click', function() {
+        mobileMenu.classList.toggle('hidden');
+    });
+    
+    // Close search and menu when clicking outside
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('#search-container') && !event.target.closest('#search-toggle')) {
+            searchContainer.classList.add('hidden');
+        }
+        
+        if (!event.target.closest('#mobile-menu') && !event.target.closest('#mobile-menu-button')) {
+            mobileMenu.classList.add('hidden');
+        }
+    });
+});
+</script>
