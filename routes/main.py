@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request
 from models.post import Post
+from models.comment import Comment
 from datetime import datetime
 
 main_bp = Blueprint('main', __name__)
@@ -29,6 +30,14 @@ def download():
 @main_bp.route('/post/<int:post_id>')
 def view_post(post_id):
     post = Post.query.get_or_404(post_id)
-    print(f"Post {post_id} has {post.comments.count()} comments")
-    comments = post.comments.order_by(Comment.created_at.asc()).all()
-    return render_template('post/view.html', post=post, comments=comments)
+    
+    # Fetch top-level comments (without parent) ordered by creation time
+    comments = Comment.query.filter_by(post_id=post_id, parent_id=None).order_by(Comment.created_at.asc()).all()
+    
+    # Find related posts (simple implementation)
+    related_posts = Post.query.filter(Post.id != post_id, Post.category == post.category).limit(3).all()
+    
+    return render_template('post/view.html', 
+                           post=post, 
+                           comments=comments, 
+                           related_posts=related_posts)

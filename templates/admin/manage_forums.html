@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Forums - Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <h1 class="page-title">Manage Forums</h1>
+    
+    <div class="modern-card">
+        <div class="modern-card-header flex justify-between items-center">
+            <h2>Forum Categories</h2>
+            <a href="{{ url_for('admin.create_forum_category') }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus mr-2"></i> Add Category
+            </a>
+        </div>
+        <div class="modern-card-content p-0">
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b border-border-color">
+                        <th class="p-4 text-left">Name</th>
+                        <th class="p-4 text-left">Description</th>
+                        <th class="p-4 text-center">Order</th>
+                        <th class="p-4 text-center">Topics</th>
+                        <th class="p-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for category in categories %}
+                        <tr class="border-b border-border-color hover:bg-black hover:bg-opacity-20">
+                            <td class="p-4 font-medium">{{ category.name }}</td>
+                            <td class="p-4">{{ category.description or 'No description' }}</td>
+                            <td class="p-4 text-center">{{ category.order }}</td>
+                            <td class="p-4 text-center">{{ category.topics.count() }}</td>
+                            <td class="p-4 text-right">
+                                <a href="{{ url_for('admin.edit_forum_category', category_id=category.id) }}" 
+                                   class="text-primary-color hover:text-accent-color mr-3">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <form action="{{ url_for('admin.delete_forum_category', category_id=category.id) }}" 
+                                      method="POST" class="inline">
+                                    <button type="submit" 
+                                            class="text-red-400 hover:text-red-500" 
+                                            onclick="return confirm('Are you sure? This will delete all topics in this category.')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -23,13 +23,11 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentPage = location.pathname;
     
     document.addEventListener('click', function(e) {
-        // Find closest anchor tag
         const link = e.target.closest('a');
         
         if (link && link.href && link.href.startsWith(window.location.origin) && !link.dataset.noTransition) {
             e.preventDefault();
             
-            // Exit transition
             document.body.classList.add('page-exit');
             
             setTimeout(() => {
@@ -43,7 +41,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.classList.remove('page-enter');
     }, 500);
     
-    // Handle back/forward navigation
     window.addEventListener('popstate', function() {
         if (currentPage !== location.pathname) {
             document.body.classList.add('page-exit');
@@ -59,7 +56,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const dropdown = this.querySelector('.dropdown-menu');
             if (dropdown && window.innerWidth < 768) {
                 if (dropdown.classList.contains('hidden')) {
-                    // Close other dropdowns
                     document.querySelectorAll('.dropdown-menu').forEach(menu => {
                         if (menu !== dropdown) {
                             menu.classList.add('hidden');
@@ -70,7 +66,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     dropdown.classList.add('hidden');
                 }
                 
-                // Prevent click from propagating if clicking dropdown toggle on mobile
                 if (!e.target.closest('a') || e.target.nextElementSibling === dropdown) {
                     e.preventDefault();
                 }

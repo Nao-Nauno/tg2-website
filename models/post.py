@@ -1,5 +1,6 @@
 from datetime import datetime
 from extensions import db
+from models.comment import Comment
 
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -22,5 +23,4 @@ class Post(db.Model):
         return f'<Post {self.title}>'
         
     def get_comment_count(self):
-        return 1
-        # return Comment.query.filter_by(post_id=self.id).count()
+        return Comment.query.filter_by(post_id=self.id).count()

@@ -26,6 +26,42 @@
                     About
                 </a>
             </div>
+
+            <!-- Forum -->
+            <div class="nav-item relative group">
+                <a href="{{ url_for('forum.forum_index') }}" class="text-amber-200 hover:text-white font-medieval transition-colors flex items-center">
+                    <i class="fas fa-comments mr-2"></i> Forum
+                </a>
+            </div>
+
+            <!-- Documentation Dropdown -->
+            <div class="nav-item relative group">
+                <a href="#" class="text-amber-200 hover:text-white font-medieval transition-colors flex items-center">
+                    Documentation
+                    <i class="fas fa-chevron-down text-xs ml-2"></i>
+                </a>
+                <div class="dropdown-menu absolute left-0 bg-gray-800 border border-amber-900 rounded shadow-lg py-2 w-48 z-50 mt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 translate-y-[-10px] transition-all duration-200">
+                    <a href="/lua/docs" class="block px-4 py-2 text-amber-200 hover:bg-gray-700 transition-colors">
+                        <i class="fas fa-book mr-2"></i> Function References
+                    </a>
+                </div>
+            </div>
+
+            <!-- Scripts Dropdown -->
+            <div class="nav-item relative group">
+                <a href="#" class="text-amber-200 hover:text-white font-medieval transition-colors flex items-center">
+                    Scripts
+                    <i class="fas fa-chevron-down text-xs ml-2"></i>
+                </a>
+                <div class="dropdown-menu absolute left-0 bg-gray-800 border border-amber-900 rounded shadow-lg py-2 w-48 z-50 mt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 translate-y-[-10px] transition-all duration-200">
+                    <a href="/lua/create" class="block px-4 py-2 text-amber-200 hover:bg-gray-700 transition-colors">
+                        <i class="fas fa-edit mr-2"></i> Create Script
+                    </a>
+                    <a href="/lua/scripts" class="block px-4 py-2 text-amber-200 hover:bg-gray-700 transition-colors">
+                        <i class="fas fa-archive mr-2"></i> Script Library
+                    </a>
+                </div>
+            </div>
         </nav>
         
         <!-- User Menu / Search -->
@@ -36,34 +72,34 @@
             </button>
             
             <!-- User Menu -->
-            {% if current_user.is_authenticated %}
-                <div class="nav-item relative group">
-                    <div class="flex items-center text-amber-200 cursor-pointer">
-                        <img src="{{ url_for('static', filename=current_user.avatar_path) }}" alt="User Avatar" class="h-8 w-8 rounded-full border-2 border-amber-600 mr-2">
-                        <span class="font-medieval">{{ current_user.username }}</span>
-                    </div>
-                    <div class="dropdown-menu absolute hidden group-hover:block right-0 bg-gray-800 border border-amber-900 rounded shadow-lg py-2 w-48 z-50">
-                        <a href="{{ url_for('user.profile', username=current_user.username) }}" class="block px-4 py-2 text-amber-200 hover:bg-gray-700 transition-colors">
-                            <i class="fas fa-user-circle"></i> My Profile
-                        </a>
-                        <a href="{{ url_for('user.edit_profile') }}" class="block px-4 py-2 text-amber-200 hover:bg-gray-700 transition-colors">
-                            <i class="fas fa-cog"></i> Edit Profile
-                        </a>
-                        <a href="/lua/scripts" class="block px-4 py-2 text-amber-200 hover:bg-gray-700 transition-colors">
-                            <i class="fas fa-code"></i> My Scripts
-                        </a>
-                        {% if current_user.is_admin %}
-                            <a href="{{ url_for('admin.dashboard') }}" class="block px-4 py-2 text-amber-200 hover:bg-gray-700 transition-colors">
-                                <i class="fas fa-crown"></i> Admin Dashboard
+                {% if current_user.is_authenticated %}
+                    <div class="nav-item relative group">
+                        <div class="flex items-center text-amber-200 cursor-pointer">
+                            <img src="{{ url_for('static', filename=current_user.avatar_path) }}" alt="User Avatar" class="h-8 w-8 rounded-full border-2 border-amber-600 mr-2">
+                            <span class="font-medieval">{{ current_user.username }}</span>
+                        </div>
+                        <div class="dropdown-menu absolute hidden group-hover:block right-0 bg-gray-800 border border-amber-900 rounded shadow-lg py-2 w-48 z-50">
+                            <a href="{{ url_for('user.profile', username=current_user.username) }}" class="block px-4 py-2 text-amber-200 hover:bg-gray-700 transition-colors">
+                                <i class="fas fa-user-circle mr-2"></i> View Profile
                             </a>
-                        {% endif %}
-                        <div class="border-t border-amber-900 my-1"></div>
-                        <a href="{{ url_for('auth.logout') }}" class="block px-4 py-2 text-amber-200 hover:bg-gray-700 transition-colors">
-                            <i class="fas fa-sign-out-alt"></i> Logout
-                        </a>
+                            <a href="{{ url_for('user.edit_profile') }}" class="block px-4 py-2 text-amber-200 hover:bg-gray-700 transition-colors">
+                                <i class="fas fa-cog mr-2"></i> Edit Profile
+                            </a>
+                            <a href="/lua/scripts" class="block px-4 py-2 text-amber-200 hover:bg-gray-700 transition-colors">
+                                <i class="fas fa-code mr-2"></i> My Scripts
+                            </a>
+                            {% if current_user.is_admin %}
+                                <a href="{{ url_for('admin.dashboard') }}" class="block px-4 py-2 text-amber-200 hover:bg-gray-700 transition-colors">
+                                    <i class="fas fa-crown mr-2"></i> Admin Dashboard
+                                </a>
+                            {% endif %}
+                            <div class="border-t border-amber-900 my-1"></div>
+                            <a href="{{ url_for('auth.logout') }}" class="block px-4 py-2 text-amber-200 hover:bg-gray-700 transition-colors">
+                                <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                            </a>
+                        </div>
                     </div>
-                </div>
-            {% else %}
+                {% else %}
                 <div class="flex items-center space-x-4">
                     <a href="{{ url_for('auth.login') }}" class="text-amber-200 hover:text-white font-medieval transition-colors">
                         <i class="fas fa-sign-in-alt mr-1"></i> Login
@@ -86,12 +122,35 @@
         <div class="py-2 px-4">
             <a href="/" class="block py-2 text-amber-200 hover:text-white font-medieval">Home</a>
             <a href="/about" class="block py-2 text-amber-200 hover:text-white font-medieval">About</a>
-            <a href="/reforged" class="block py-2 text-amber-200 hover:text-white font-medieval">Reforged Mod</a>
-            <a href="/lua/editor" class="block py-2 text-amber-200 hover:text-white font-medieval">Lua Editor</a>
-            <a href="/tools" class="block py-2 text-amber-200 hover:text-white font-medieval">Tools</a>
-            <a href="/forum" class="block py-2 text-amber-200 hover:text-white font-medieval">Community</a>
-            <a href="https://gitlab.com/guild2reforged" class="block py-2 text-amber-200 hover:text-white font-medieval">GitLab</a>
-            <a href="https://discord.gg/guild2reforged" class="block py-2 text-amber-200 hover:text-white font-medieval">Discord</a>
+            <a href="{{ url_for('forum.forum_index') }}" class="block py-2 text-amber-200 hover:text-white font-medieval">
+                <i class="fas fa-comments mr-2"></i> Forum
+            </a>
+            
+            <!-- Mobile Dropdown for Documentation -->
+            <div class="mobile-dropdown">
+                <div class="flex justify-between items-center py-2 text-amber-200 hover:text-white font-medieval">
+                    <span>Documentation</span>
+                    <i class="fas fa-chevron-down mobile-dropdown-toggle"></i>
+                </div>
+                <div class="mobile-dropdown-content hidden pl-4">
+                    <a href="/lua/docs" class="block py-2 text-amber-200 hover:text-white font-medieval">Function References</a>
+                    <a href="/lua/docs/api" class="block py-2 text-amber-200 hover:text-white font-medieval">API Documentation</a>
+                    <a href="/lua/docs/tutorials" class="block py-2 text-amber-200 hover:text-white font-medieval">Tutorials</a>
+                </div>
+            </div>
+
+            <!-- Mobile Dropdown for Scripts -->
+            <div class="mobile-dropdown">
+                <div class="flex justify-between items-center py-2 text-amber-200 hover:text-white font-medieval">
+                    <span>Scripts</span>
+                    <i class="fas fa-chevron-down mobile-dropdown-toggle"></i>
+                </div>
+                <div class="mobile-dropdown-content hidden pl-4">
+                    <a href="/lua/create" class="block py-2 text-amber-200 hover:text-white font-medieval">Create Script</a>
+                    <a href="/lua/scripts" class="block py-2 text-amber-200 hover:text-white font-medieval">Script Library</a>
+                    <a href="/lua/scripts/my-scripts" class="block py-2 text-amber-200 hover:text-white font-medieval">My Scripts</a>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -130,6 +189,18 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!event.target.closest('#mobile-menu') && !event.target.closest('#mobile-menu-button')) {
             mobileMenu.classList.add('hidden');
         }
+    });
+
+    // Mobile dropdown toggles
+    const mobileDropdowns = document.querySelectorAll('.mobile-dropdown');
+    mobileDropdowns.forEach(dropdown => {
+        const toggle = dropdown.querySelector('.mobile-dropdown-toggle');
+        const content = dropdown.querySelector('.mobile-dropdown-content');
+        
+        toggle.addEventListener('click', function() {
+            content.classList.toggle('hidden');
+            toggle.classList.toggle('rotate-180');
+        });
     });
 });
 </script>

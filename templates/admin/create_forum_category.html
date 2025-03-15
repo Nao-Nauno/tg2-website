@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Forum Category - Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="page-title">Create Forum Category</h1>
+    
+    <div class="modern-card">
+        <div class="modern-card-header">
+            <h2>New Forum Category</h2>
+        </div>
+        <div class="modern-card-content">
+            <form method="POST" action="{{ url_for('admin.create_forum_category') }}">
+                <div class="form-control mb-4">
+                    <label for="name" class="form-label">Category Name</label>
+                    <input type="text" id="name" name="name" class="form-input" required>
+                </div>
+                
+                <div class="form-control mb-4">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea id="description" name="description" class="form-input" rows="3"></textarea>
+                </div>
+                
+                <div class="form-control mb-4">
+                    <label for="order" class="form-label">Display Order</label>
+                    <input type="number" id="order" name="order" class="form-input" value="0" min="0">
+                    <p class="text-xs text-text-secondary mt-1">Lower numbers appear first</p>
+                </div>
+                
+                <div class="flex justify-between">
+                    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Create Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

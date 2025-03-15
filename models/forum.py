@@ -6,6 +6,8 @@ class ForumCategory(db.Model):
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(255))
     order = db.Column(db.Integer, default=0)
+    
+    # Relationship with topics
     topics = db.relationship('ForumTopic', backref='category', lazy='dynamic')
     
     def get_stats(self):

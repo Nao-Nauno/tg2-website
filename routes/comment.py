@@ -1,9 +1,8 @@
-from flask import Blueprint, redirect, url_for, flash, request, jsonify
+from flask import Blueprint, request, jsonify, redirect, url_for
 from flask_login import login_required, current_user
-from extensions import db
 from models.comment import Comment
 from models.post import Post
-from datetime import datetime
+from extensions import db
 
 comment_bp = Blueprint('comment', __name__)
 
@@ -13,39 +12,28 @@ def add_comment(post_id):
     post = Post.query.get_or_404(post_id)
     content = request.form.get('content')
     parent_id = request.form.get('parent_id')
-    
+
     if not content:
-        flash('Comment cannot be empty', 'error')
-        return redirect(url_for('main.view_post', post_id=post_id))
-    
-    # Create comment
-    comment = Comment(
+        return jsonify({'success': False, 'message': 'Comment cannot be empty'}), 400
+
+    new_comment = Comment(
         content=content,
-        post_id=post_id,
         user_id=current_user.id,
+        post_id=post_id,
         parent_id=parent_id if parent_id else None
     )
-    
-    db.session.add(comment)
+
+    db.session.add(new_comment)
     db.session.commit()
-    
-    # Handle AJAX requests
+
+    # If it's an AJAX request, return JSON
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        # Format creation time
-        created_time = comment.created_at.strftime('%B %d, %Y at %H:%M')
-        
         return jsonify({
-            'success': True,
-            'comment': {
-                'id': comment.id,
-                'content': comment.content,
-                'author': current_user.username,
-                'author_avatar': current_user.avatar_path,
-                'created_time': created_time
-            }
+            'success': True, 
+            'comment_id': new_comment.id
         })
-    
-    flash('Your comment has been added!', 'success')
+
+    # Otherwise, redirect back to the post
     return redirect(url_for('main.view_post', post_id=post_id))
 
 @comment_bp.route('/comment/<int:comment_id>/edit', methods=['POST'])
@@ -53,35 +41,17 @@ def add_comment(post_id):
 def edit_comment(comment_id):
     comment = Comment.query.get_or_404(comment_id)
     
-    # Check if user is comment author
-    if comment.user_id != current_user.id and not current_user.is_admin:
-        flash('You can only edit your own comments', 'error')
-        return redirect(url_for('main.view_post', post_id=comment.post_id))
-    
+    # Check if the current user is the author or an admin
+    if current_user.id != comment.user_id and not current_user.is_admin:
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+
     content = request.form.get('content')
-    
     if not content:
-        flash('Comment cannot be empty', 'error')
-        return redirect(url_for('main.view_post', post_id=comment.post_id))
-    
-    # Update comment
+        return jsonify({'success': False, 'message': 'Comment cannot be empty'}), 400
+
     comment.content = content
-    comment.updated_at = datetime.utcnow()
-    
     db.session.commit()
-    
-    # Handle AJAX requests
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return jsonify({
-            'success': True,
-            'comment': {
-                'id': comment.id,
-                'content': comment.content,
-                'updated': True
-            }
-        })
-    
-    flash('Your comment has been updated!', 'success')
+
     return redirect(url_for('main.view_post', post_id=comment.post_id))
 
 @comment_bp.route('/comment/<int:comment_id>/delete', methods=['POST'])
@@ -89,23 +59,11 @@ def edit_comment(comment_id):
 def delete_comment(comment_id):
     comment = Comment.query.get_or_404(comment_id)
     
-    # Check if user is comment author or admin
-    if comment.user_id != current_user.id and not current_user.is_admin:
-        flash('You can only delete your own comments', 'error')
-        return redirect(url_for('main.view_post', post_id=comment.post_id))
-    
-    post_id = comment.post_id
-    
-    # Delete comment
+    # Check if the current user is the author or an admin
+    if current_user.id != comment.user_id and not current_user.is_admin:
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+
     db.session.delete(comment)
     db.session.commit()
-    
-    # Handle AJAX requests
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return jsonify({
-            'success': True,
-            'message': 'Comment deleted successfully'
-        })
-    
-    flash('Your comment has been deleted!', 'success')
-    return redirect(url_for('main.view_post', post_id=post_id))
+
+    return redirect(url_for('main.view_post', post_id=comment.post_id))

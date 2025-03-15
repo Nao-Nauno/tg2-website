@@ -6,52 +6,114 @@
 <div class="max-w-6xl mx-auto">
     <h1 class="page-title">Admin Dashboard</h1>
     
-    <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-medieval text-primary-color">Manage Posts</h2>
-        <a href="{{ url_for('admin.create_post') }}" class="btn btn-primary">
-            <i class="fas fa-plus mr-2"></i> Create New Post
-        </a>
+    <!-- Posts Management Section -->
+    <div class="mb-8">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-medieval text-primary-color">Manage Posts</h2>
+            <a href="{{ url_for('admin.create_post') }}" class="btn btn-primary">
+                <i class="fas fa-plus mr-2"></i> Create New Post
+            </a>
+        </div>
+        
+        {% if posts %}
+            <div class="modern-card">
+                <div class="modern-card-header">
+                    <h2>All Posts</h2>
+                </div>
+                <div class="modern-card-content p-0">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-border-color">
+                                <th class="p-4 text-left">Title</th>
+                                <th class="p-4 text-left">Category</th>
+                                <th class="p-4 text-left">Date</th>
+                                <th class="p-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for post in posts %}
+                                <tr class="border-b border-border-color hover:bg-black hover:bg-opacity-20">
+                                    <td class="p-4 font-medium">{{ post.title }}</td>
+                                    <td class="p-4">
+                                        <span class="px-2 py-1 text-xs rounded-full 
+                                            {% if post.category == 'announcement' %}bg-blue-900 text-blue-200
+                                            {% elif post.category == 'update' %}bg-green-900 text-green-200
+                                            {% elif post.category == 'guide' %}bg-purple-900 text-purple-200
+                                            {% elif post.category == 'event' %}bg-yellow-900 text-yellow-200
+                                            {% else %}bg-gray-800 text-gray-200{% endif %}">
+                                            {{ post.category|capitalize }}
+                                        </span>
+                                        {% if post.featured %}
+                                            <span class="ml-2 px-2 py-1 text-xs bg-primary-color text-white rounded-full">Featured</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="p-4">{{ post.created_at.strftime('%B %d, %Y') }}</td>
+                                    <td class="p-4 text-right">
+                                        <a href="{{ url_for('admin.edit_post', post_id=post.id) }}" class="text-primary-color hover:text-accent-color mr-3">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                        <form action="{{ url_for('admin.delete_post', post_id=post.id) }}" method="POST" class="inline">
+                                            <button type="submit" class="text-red-400 hover:text-red-500" onclick="return confirm('Are you sure you want to delete this post?')">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% else %}
+            <div class="modern-card">
+                <div class="modern-card-content text-center p-8">
+                    <p class="text-text-secondary">No posts yet. Create your first post!</p>
+                </div>
+            </div>
+        {% endif %}
     </div>
     
-    {% if posts %}
+    <!-- Forum Management Section -->
+    <div>
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-medieval text-primary-color">Forum Management</h2>
+            <div class="space-x-2">
+                <a href="{{ url_for('admin.create_forum_category') }}" class="btn btn-primary">
+                    <i class="fas fa-plus mr-2"></i> Create Category
+                </a>
+                <a href="{{ url_for('admin.manage_forums') }}" class="btn btn-secondary">
+                    <i class="fas fa-cog mr-2"></i> Manage Forums
+                </a>
+            </div>
+        </div>
+        
         <div class="modern-card">
             <div class="modern-card-header">
-                <h2>All Posts</h2>
+                <h2>Forum Categories</h2>
             </div>
             <div class="modern-card-content p-0">
                 <table class="w-full">
                     <thead>
                         <tr class="border-b border-border-color">
-                            <th class="p-4 text-left">Title</th>
-                            <th class="p-4 text-left">Category</th>
-                            <th class="p-4 text-left">Date</th>
+                            <th class="p-4 text-left">Name</th>
+                            <th class="p-4 text-left">Description</th>
+                            <th class="p-4 text-center">Topics</th>
                             <th class="p-4 text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for post in posts %}
+                        {% for category in forum_categories %}
                             <tr class="border-b border-border-color hover:bg-black hover:bg-opacity-20">
-                                <td class="p-4 font-medium">{{ post.title }}</td>
-                                <td class="p-4">
-                                    <span class="px-2 py-1 text-xs rounded-full 
-                                        {% if post.category == 'announcement' %}bg-blue-900 text-blue-200
-                                        {% elif post.category == 'update' %}bg-green-900 text-green-200
-                                        {% elif post.category == 'guide' %}bg-purple-900 text-purple-200
-                                        {% elif post.category == 'event' %}bg-yellow-900 text-yellow-200
-                                        {% else %}bg-gray-800 text-gray-200{% endif %}">
-                                        {{ post.category|capitalize }}
-                                    </span>
-                                    {% if post.featured %}
-                                        <span class="ml-2 px-2 py-1 text-xs bg-primary-color text-white rounded-full">Featured</span>
-                                    {% endif %}
-                                </td>
-                                <td class="p-4">{{ post.created_at.strftime('%B %d, %Y') }}</td>
+                                <td class="p-4 font-medium">{{ category.name }}</td>
+                                <td class="p-4">{{ category.description }}</td>
+                                <td class="p-4 text-center">{{ category.topics.count() }}</td>
                                 <td class="p-4 text-right">
-                                    <a href="{{ url_for('admin.edit_post', post_id=post.id) }}" class="text-primary-color hover:text-accent-color mr-3">
+                                    <a href="{{ url_for('admin.edit_forum_category', category_id=category.id) }}" class="text-primary-color hover:text-accent-color mr-3">
                                         <i class="fas fa-edit"></i> Edit
                                     </a>
-                                    <form action="{{ url_for('admin.delete_post', post_id=post.id) }}" method="POST" class="inline">
-                                        <button type="submit" class="text-red-400 hover:text-red-500" onclick="return confirm('Are you sure you want to delete this post?')">
+                                    <form action="{{ url_for('admin.delete_forum_category', category_id=category.id) }}" method="POST" class="inline">
+                                        <button type="submit" class="text-red-400 hover:text-red-500" 
+                                                onclick="return confirm('Are you sure you want to delete this category? All topics and posts will be deleted.')">
                                             <i class="fas fa-trash"></i> Delete
                                         </button>
                                     </form>
@@ -62,12 +124,6 @@
                 </table>
             </div>
         </div>
-    {% else %}
-        <div class="modern-card">
-            <div class="modern-card-content text-center p-8">
-                <p class="text-text-secondary">No posts yet. Create your first post!</p>
-            </div>
-        </div>
-    {% endif %}
+    </div>
 </div>
 {% endblock %}

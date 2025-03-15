@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}Community Forum - The Guild 2: Renaissance{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4">
+    <div class="text-center mb-12">
+        <h1 class="text-5xl font-medieval text-primary-color mb-4">Community Forum</h1>
+        <p class="text-text-secondary max-w-2xl mx-auto">
+            Connect with fellow players, share strategies, get support, and be part of the Guild 2: Renaissance community.
+        </p>
+    </div>
+
+    {% if current_user.is_authenticated %}
+        <div class="text-center mb-8">
+            <a href="{{ url_for('forum.create_topic') }}" class="btn btn-primary text-lg">
+                <i class="fas fa-plus-circle mr-2"></i> Start a New Discussion
+            </a>
+        </div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {% for category in categories %}
+            <div class="forum-category-card group">
+                <a href="{{ url_for('forum.forum_category', category_id=category.id) }}" class="block">
+                    <div class="modern-card hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-2">
+                        <div class="modern-card-header flex items-center justify-between">
+                            <h2 class="text-2xl font-medieval text-primary-color">
+                                {{ category.name }}
+                            </h2>
+                            <i class="fas fa-chevron-right text-text-secondary group-hover:text-primary-color transition-colors"></i>
+                        </div>
+                        <div class="modern-card-content">
+                            <p class="text-text-secondary mb-4 h-12 overflow-hidden">
+                                {{ category.description }}
+                            </p>
+                            
+                            {% set stats = category.get_stats() %}
+                            <div class="grid grid-cols-3 text-center border-t border-border-color pt-4">
+                                <div>
+                                    <div class="text-2xl font-bold text-primary-color">
+                                        {{ stats.topic_count }}
+                                    </div>
+                                    <div class="text-xs text-text-secondary">Topics</div>
+                                </div>
+                                <div>
+                                    <div class="text-2xl font-bold text-primary-color">
+                                        {{ stats.post_count }}
+                                    </div>
+                                    <div class="text-xs text-text-secondary">Posts</div>
+                                </div>
+                                <div>
+                                    {% if stats.latest_post %}
+                                        <div class="text-sm text-text-secondary">
+                                            Latest Post
+                                        </div>
+                                        <a href="{{ url_for('forum.forum_topic', topic_id=stats.latest_post.topic_id) }}" 
+                                           class="text-xs text-primary-color hover:underline truncate block mt-1">
+                                            {{ stats.latest_post.topic.title }}
+                                        </a>
+                                    {% else %}
+                                        <div class="text-xs text-text-secondary">
+                                            No posts yet
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        {% endfor %}
+    </div>
+
+    {% if not categories %}
+        <div class="text-center bg-card-bg p-8 rounded-lg">
+            <i class="fas fa-comment-slash text-6xl text-text-secondary mb-4"></i>
+            <h2 class="text-2xl text-text-primary mb-2">No Forum Categories Yet</h2>
+            <p class="text-text-secondary mb-4">
+                The forum is currently being set up. Check back soon!
+            </p>
+            {% if current_user.is_admin %}
+                <a href="{{ url_for('admin.create_forum_category') }}" class="btn btn-primary">
+                    Create First Category
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.forum-category-card {
+    perspective: 1000px;
+    transition: all 0.3s ease;
+}
+
+.forum-category-card:hover {
+    transform: translateY(-10px) rotateX(5deg);
+}
+</style>
+{% endblock %}

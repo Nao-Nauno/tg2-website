@@ -3,13 +3,14 @@
 {% block title %}The Guild 2: Renaissance - Reforged Mod{% endblock %}
 
 {% block content %}
+
 <!-- Hero Banner -->
 <div class="hero-banner relative rounded-lg overflow-hidden mb-8 shadow-xl">
     <img src="{{ url_for('static', filename='images/guild2_banner.jpg') }}" alt="Guild 2 Banner" class="w-full h-96 object-cover">
     <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
         <div class="text-center p-8 max-w-4xl">
-            <h1 class="text-4xl font-medieval text-amber-100 mb-4">The Guild 2: Renaissance</h1>
-            <p class="text-xl text-amber-200 mb-6">Experience the definitive medieval dynasty simulator with the Reforged Mod</p>
+            <h1 class="text-4xl font-medieval text-amber-100 mb-4">The Guild 2: Reforged</h1>
+            <p class="text-xl text-amber-200 mb-6">Experience the new ultimate Renaissance experience with Reforged</p>
             <div class="flex justify-center gap-4">
                 <a href="/download" class="btn btn-primary">
                     <i class="fas fa-download mr-2"></i> Download Now
@@ -39,7 +40,7 @@
             <h2>New Content</h2>
         </div>
         <div class="modern-card-content">
-            <p class="text-gray-300 mb-4">Discover new professions, buildings, items, and quests that enrich your medieval dynasty experience.</p>
+            <p class="text-gray-300 mb-4">Discover new content and events that enrich your late medieval dynasty experience.</p>
             <a href="/reforged" class="text-primary-color hover:text-accent-color font-medieval">Explore →</a>
         </div>
     </div>
@@ -169,60 +170,111 @@
 
 <!-- GitLab Integration Banner -->
 <div class="modern-card mb-12">
-    <div class="modern-card-content p-6">
-        <div class="flex flex-col md:flex-row items-center justify-between">
-            <div class="mb-4 md:mb-0 md:mr-6">
-                <h2 class="text-2xl font-medieval text-primary-color mb-2">Contribute to Reforged</h2>
-                <p class="text-text-secondary mb-4">The Reforged mod is open source and hosted on GitLab. Join our development team and help make the mod even better!</p>
-                <div class="flex space-x-3">
-                    <a href="https://gitlab.com/fajeth-modpack/megamodpack-reforged" target="_blank" class="btn btn-gitlab">
-                        <i class="fab fa-gitlab mr-2"></i> View Repository
-                    </a>
-                    <a href="/contribute" class="btn btn-secondary">
-                        <i class="fas fa-code-branch mr-2"></i> How to Contribute
-                    </a>
+    <div class="modern-card-header flex justify-between items-center">
+        <h2>Project Commits</h2>
+        <a href="https://gitlab.com/{{ project_id }}/commits" target="_blank" class="text-sm text-primary-color hover:text-accent-color">
+            View Full Repository →
+        </a>
+    </div>
+    <div class="modern-card-content p-4">
+        {% if latest_commits %}
+            <div class="space-y-3">
+                {% for commit in latest_commits %}
+                    <div class="flex items-center p-3 rounded-lg hover:bg-card-bg/30 transition-colors group">
+                        <!-- Commit Avatar -->
+                        <div class="mr-4 flex-shrink-0">
+                            <img src="{{ commit.author_avatar }}" alt="{{ commit.author_name }}" 
+                                 class="w-10 h-10 rounded-full object-cover border-2 border-primary-color/20">
+                        </div>
+                        
+                        <!-- Commit Details -->
+                        <div class="flex-grow min-w-0">
+                            <div class="flex items-center mb-1">
+                                <h3 class="text-sm font-semibold text-primary-color mr-2 truncate">
+                                    {{ commit.title.split('\n')[0] }}
+                                </h3>
+                            </div>
+                            
+                            <div class="text-xs text-text-secondary flex items-center">
+                                <span class="truncate max-w-[200px] mr-2">
+                                    {{ commit.author_name }}
+                                </span>
+                                <span class="mx-1">•</span>
+                                <span class="font-mono bg-card-bg px-1 rounded mr-2">
+                                    {{ commit.short_id }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Commit Time -->
+                        <div class="text-xs text-text-secondary ml-auto text-right w-24">
+                            {{ commit.time_ago }}
+                        </div>
+                        
+                        <!-- Commit Link -->
+                        <div class="ml-3">
+                            <a href="https://gitlab.com/{{ project_id }}/-/commit/{{ commit.id }}" 
+                               target="_blank" 
+                               class="text-text-secondary hover:text-primary-color text-sm">
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Top Contributors Section -->
+            <div class="mt-6 border-t border-border-color pt-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-sm font-semibold text-primary-color">Top Contributors</h3>
+                    <div class="text-xs text-text-secondary">
+                        Total Commits: 
+                        {% set total_commits = get_top_contributors()|sum(attribute='commits') %}
+                        {{ total_commits }}
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-5 gap-4">
+                    {% set contributors = get_top_contributors() %}
+                    {% for contributor in contributors %}
+                        <div class="relative group text-center">
+                            <div class="relative inline-block">
+                                <img src="{{ contributor.avatar }}" 
+                                     alt="{{ contributor.name }}" 
+                                     class="w-16 h-16 rounded-full object-cover 
+                                            border-3 border-transparent 
+                                            group-hover:border-primary-color 
+                                            transition-all mx-auto">
+                            </div>
+                            
+                            <div class="mt-2">
+                                <div class="text-xs text-text-primary truncate">
+                                    {{ contributor.name }}
+                                </div>
+                                <div class="text-xs text-text-secondary">
+                                    {{ contributor.commits }} commits
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
                 </div>
             </div>
-            <div class="p-4 bg-card-bg rounded-lg border border-border-color">
-                <div class="text-sm text-text-secondary mb-2">Latest Commit</div>
-                <div class="font-mono bg-darker-bg p-2 rounded mb-2 text-sm">
-                    <div class="text-green-400">fix: Economy balancing for craftsman buildings</div>
-                    <div class="text-text-secondary">by <span class="text-primary-color">DevLead</span> - 5 hours ago</div>
-                </div>
-                <div class="flex text-sm">
-                    <div class="text-text-secondary mr-4"><i class="fas fa-code-branch mr-1"></i> 12 active branches</div>
-                    <div class="text-text-secondary"><i class="fas fa-code-commit mr-1"></i> 1,245 commits</div>
-                </div>
+            
+            <!-- See More Button -->
+            <div class="text-center mt-4">
+                <a href="https://gitlab.com/{{ project_id }}/commits" 
+                   target="_blank" 
+                   class="btn btn-secondary btn-sm inline-flex items-center">
+                    <i class="fas fa-code-branch mr-2"></i> See More Commits
+                </a>
             </div>
-        </div>
+        {% else %}
+            <div class="text-center text-text-secondary">
+                <i class="fas fa-exclamation-triangle text-yellow-500 mr-2"></i>
+                Unable to fetch commit data
+            </div>
+        {% endif %}
     </div>
 </div>
 
-<!-- Quick Links -->
-<div class="grid grid-cols-3 md:grid-cols-3 gap-10 mb-12">
-    <a href="/lua/docs" class="bg-card-bg hover:bg-primary-color/10 transition-colors p-4 rounded-lg text-center">
-        <div class="w-12 h-12 bg-primary-color/20 rounded-full flex items-center justify-center mx-auto mb-3">
-            <i class="fas fa-book text-primary-color"></i>
-        </div>
-        <h3 class="font-medieval text-primary-color mb-1">Lua</h3>
-        <p class="text-sm text-text-secondary">Learn the scripts database</p>
-    </a>
-    
-    <a href="/lua/create" class="bg-card-bg hover:bg-primary-color/10 transition-colors p-4 rounded-lg text-center">
-        <div class="w-12 h-12 bg-primary-color/20 rounded-full flex items-center justify-center mx-auto mb-3">
-            <i class="fas fa-code text-primary-color"></i>
-        </div>
-        <h3 class="font-medieval text-primary-color mb-1">Script Editor</h3>
-        <p class="text-sm text-text-secondary">Create your own scripts</p>
-    </a>
-
-    <a href="/lua/scripts" class="bg-card-bg hover:bg-primary-color/10 transition-colors p-4 rounded-lg text-center">
-        <div class="w-12 h-12 bg-primary-color/20 rounded-full flex items-center justify-center mx-auto mb-3">
-            <i class="fas fa-code text-primary-color"></i>
-        </div>
-        <h3 class="font-medieval text-primary-color mb-1">Scripts Library</h3>
-        <p class="text-sm text-text-secondary">Browse some community-made scripts</p>
-    </a>
-
-</div>
 {% endblock %}

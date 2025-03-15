@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Forum Category - Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="page-title">Edit Forum Category</h1>
+    
+    <div class="modern-card">
+        <div class="modern-card-header">
+            <h2>Edit: {{ category.name }}</h2>
+        </div>
+        <div class="modern-card-content">
+            <form method="POST" action="{{ url_for('admin.edit_forum_category', category_id=category.id) }}">
+                <div class="form-control mb-4">
+                    <label for="name" class="form-label">Category Name</label>
+                    <input type="text" id="name" name="name" class="form-input" value="{{ category.name }}" required>
+                </div>
+                
+                <div class="form-control mb-4">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea id="description" name="description" class="form-input" rows="3">{{ category.description }}</textarea>
+                </div>
+                
+                <div class="form-control mb-4">
+                    <label for="order" class="form-label">Display Order</label>
+                    <input type="number" id="order" name="order" class="form-input" value="{{ category.order }}" min="0">
+                    <p class="text-xs text-text-secondary mt-1">Lower numbers appear first</p>
+                </div>
+                
+                <div class="flex justify-between">
+                    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Update Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
